@@ -1,4 +1,6 @@
 <?php
+define('ADMIN_EMAIL',    'admin@lookgoodframes.com');
+define('ADMIN_PASSWORD', password_hash('admin123', PASSWORD_DEFAULT));
 
 $host = "localhost";
 $user = "root";
