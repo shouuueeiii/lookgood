@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/../db.php';
+require_once '../../config.php';
 
 $error = '';
 
@@ -26,6 +26,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $reason = urlencode('fraudulent activity and repeated policy violations');
             header("Location: banned.php?reason=$reason");
             exit();
+        }
+        if($emailOrUsername === ADMIN_EMAIL && password_verify($password, ADMIN_PASSWORD)) {
+            session_regenerate_id(true);
+
+            $_SESSION['user_id']    = 0; 
+            $_SESSION['first_name'] = 'Admin';
+            $_SESSION['last_name']  = '';
+            $_SESSION['email']      = ADMIN_EMAIL;
+            $_SESSION['role']       = 'admin';
+
+            header("Location: ../../admin/dashboard.php");
+            exit();
+        } else {
+            $error = 'Invalid email/username or password.';
         }
 
         // Normal database login (without status/ban_reason columns)
@@ -109,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="remember-me">
             <input type="checkbox" name="remember"> Remember me
           </label>
-          <a href="forgot-password.php?fresh=1">Forgot Password?</a>
+          <a href="#" class="forgot-link">Forgot password?</a>
         </div>
 
         <div id="formFeedback" class="error-message <?= $error ? 'show' : '' ?>">
