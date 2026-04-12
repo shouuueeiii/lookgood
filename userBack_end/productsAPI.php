@@ -9,7 +9,44 @@
  * GET (no params)            → all active products
  */
 require_once '../config.php';
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
+
+function ensureProductDetailColumns(mysqli $conn): void {
+    $definitions = [
+        'frameHeight' => 'DECIMAL(6,2) NULL',
+        'lensWidth' => 'DECIMAL(6,2) NULL',
+        'color' => 'VARCHAR(100) NULL',
+    ];
+
+    foreach ($definitions as $column => $definition) {
+        $escaped = $conn->real_escape_string($column);
+        $exists = $conn->query("SHOW COLUMNS FROM products LIKE '{$escaped}'");
+        if ($exists && $exists->num_rows === 0) {
+            $conn->query("ALTER TABLE products ADD COLUMN `{$column}` {$definition}");
+        }
+    }
+}
+
+function nullableFloat($value) {
+    if ($value === null || $value === '') {
+        return '';
+    }
+    return (float)$value;
+}
+
+function textValue($value): string {
+    return trim((string)($value ?? ''));
+}
+
+function categoryColorFallback(string $category): string {
+    $cat = strtolower(trim($category));
+    if ($cat === 'male' || $cat === 'men') return 'Matte Black';
+    if ($cat === 'female' || $cat === 'women') return 'Rose Gold';
+    return 'Classic Black';
+}
+
+ensureProductDetailColumns($conn);
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -23,7 +60,7 @@ if ($method === 'GET') {
         $id   = trim($_GET['id']);
         $stmt = $conn->prepare(
             "SELECT product_id, name, description, price, stock, category,
-            image_gallery, frameWidth, templeLength, material, status
+            image, image_gallery, frameWidth, frameHeight, templeLength, lensWidth, material, color, status
              FROM products
              WHERE product_id = ? AND status = 'active'"
         );
@@ -53,9 +90,17 @@ if ($method === 'GET') {
         $params[] = $cat;
     }
 
-    $sql  = "SELECT product_id, name, description, price, stock, category,
-                    image_gallery, frameWidth, templeLength, material, status
-            FROM products $where ORDER BY product_id DESC";
+        $sql  = "SELECT product_id, name, description, price, stock, category,
+                                        image, image_gallery, frameWidth, frameHeight, templeLength, lensWidth, material, color, status
+                        FROM products $where ORDER BY
+                            CASE
+                                WHEN product_id LIKE 'LGF-M-%' THEN 1
+                                WHEN product_id LIKE 'LGF-W-%' THEN 2
+                                WHEN product_id LIKE 'LGF-U-%' THEN 3
+                                ELSE 4
+                            END ASC,
+                            CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(product_id, '-', 3), '-', -1) AS UNSIGNED) ASC,
+                            product_id ASC";
     $stmt = $conn->prepare($sql);
 
     if ($types) {
@@ -78,26 +123,62 @@ if ($method === 'GET') {
 echo json_encode(['error' => 'Method not allowed']);
 
 function formatProduct(array $row): array {
-    $base = '../uploads/products/';
+    $scriptName = (string)($_SERVER['SCRIPT_NAME'] ?? '');
+    $appBase = str_replace('\\', '/', dirname(dirname($scriptName)));
+    $appBase = rtrim($appBase, '/');
+    $base = ($appBase !== '' ? $appBase : '') . '/uploads/products/';
+    $fsBase = dirname(__DIR__) . '/uploads/products/';
 
-    $mainImage = !empty($row['image_gallery']) ? $base . $row['image_gallery'] : null;
+    $mainImage = buildPublicImageUrl((string)($row['image'] ?? ''), $fsBase, $base);
 
     $gallery = [];
     if (!empty($row['image_gallery'])) {
-        $decoded = json_decode($row['image_gallery'], true);
+        $decoded = json_decode((string)$row['image_gallery'], true);
         if (is_array($decoded)) {
             foreach ($decoded as $f) {
-                $gallery[] = $base . $f;
+                if (!is_string($f) || trim($f) === '') {
+                    continue;
+                }
+                $url = buildPublicImageUrl($f, $fsBase, $base);
+                if ($url !== null) {
+                    $gallery[] = $url;
+                }
+            }
+        } else {
+            // Backward compatibility for rows where image_gallery is a single filename.
+            $single = trim((string)$row['image_gallery']);
+            if ($single !== '') {
+                $url = buildPublicImageUrl($single, $fsBase, $base);
+                if ($url !== null) {
+                    $gallery[] = $url;
+                }
             }
         }
     }
 
-    $images = array_values(array_filter(
+    $images = array_values(array_unique(array_filter(
         array_merge($mainImage ? [$mainImage] : [], $gallery)
-    ));
+    )));
 
     if (empty($images)) {
-        $images = ['../Resources/Images/glasses1.png'];
+        $images = [($appBase !== '' ? $appBase : '') . '/New%20folder/Resources/Images/glasses1.png'];
+    }
+
+    $frameWidth = textValue($row['frameWidth'] ?? '');
+    $frameHeight = textValue($row['frameHeight'] ?? '');
+    $templeLength = textValue($row['templeLength'] ?? '');
+    $lensWidth = textValue($row['lensWidth'] ?? '');
+    $material = textValue($row['material'] ?? '');
+    $color = textValue($row['color'] ?? '');
+
+    if ($frameHeight === '' && $frameWidth !== '') {
+        $frameHeight = $frameWidth;
+    }
+    if ($lensWidth === '' && $frameWidth !== '') {
+        $lensWidth = $frameWidth;
+    }
+    if ($color === '') {
+        $color = categoryColorFallback((string)($row['category'] ?? ''));
     }
 
     return [
@@ -109,9 +190,29 @@ function formatProduct(array $row): array {
         'stock'        => (int) $row['stock'],
         'image'        => $images[0],
         'images'       => $images,
-        'frameWidth'   => $row['frameWidth']   ?? '',
-        'templeLength' => $row['templeLength'] ?? '',
-        'material'     => $row['material']     ?? '',
+        'frameWidth'   => $frameWidth,
+        'frameHeight'  => nullableFloat($frameHeight),
+        'templeLength' => $templeLength,
+        'lensWidth'    => nullableFloat($lensWidth),
+        'material'     => $material,
+        'color'        => $color,
     ];
+}
+
+function buildPublicImageUrl(string $filename, string $fsBase, string $publicBase): ?string
+{
+    $clean = trim($filename);
+    if ($clean === '') {
+        return null;
+    }
+
+    $clean = ltrim($clean, '/\\');
+    $fullPath = $fsBase . $clean;
+    if (!is_file($fullPath)) {
+        return null;
+    }
+
+    $segments = array_map('rawurlencode', explode('/', str_replace('\\', '/', $clean)));
+    return $publicBase . implode('/', $segments);
 }
 ?>

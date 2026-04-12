@@ -1,5 +1,6 @@
 <?php
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 require_once '../config.php';
 require_once '../auth_user.php';
 requireUser();
@@ -40,6 +41,11 @@ if(!isset($_SESSION['cart']) || !is_array($_SESSION['cart'])){
 <p><?= htmlspecialchars($product['description']) ?></p>
 <p><strong>Price:</strong> ₱<?= number_format($product['price'], 2) ?></p>
 <p><strong>Stock:</strong> <?= $product['stock'] ?></p>
+<p><strong>Frame Width:</strong> <?= htmlspecialchars((string)($product['frameWidth'] ?? '—')) ?></p>
+<p><strong>Frame Height:</strong> <?= htmlspecialchars((string)($product['frameHeight'] ?? '—')) ?></p>
+<p><strong>Lens Width:</strong> <?= htmlspecialchars((string)($product['lensWidth'] ?? '—')) ?></p>
+<p><strong>Temple Length:</strong> <?= htmlspecialchars((string)($product['templeLength'] ?? '—')) ?></p>
+<p><strong>Frame Color:</strong> <?= htmlspecialchars((string)($product['color'] ?? '—')) ?></p>
 
 <?php if($product['image'] && file_exists('../uploads/products/'.$product['image'])): ?>
     <img src="../uploads/products/<?= htmlspecialchars($product['image']) ?>" width="300">

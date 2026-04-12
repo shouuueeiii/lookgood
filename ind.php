@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session_bootstrap.php';
 
 $errors = [
     'login' => $_SESSION['login_error'] ?? '',
@@ -8,7 +8,7 @@ $errors = [
 
 $activeForm = $_SESSION['active_form'] ?? 'login';
 
-session_unset();
+unset($_SESSION['login_error'], $_SESSION['register_error'], $_SESSION['active_form']);
 
 function showError($error) {
     return !empty($error) ? "<p class='error-message'>$error</p>" : '';
@@ -67,7 +67,7 @@ function isActiveForm($formName, $activeForm) {
             <label class="remember-me">
             <input type="checkbox" name="remember"> Remember me
             </label>
-            <a href="#" class="forgot-link">Forgot password?</a>
+            <a href="New folder/Login/forgot-password.php?fresh=1" class="forgot-link">Forgot password?</a>
         </div>
 
         <div id="formFeedback" class="error-message">

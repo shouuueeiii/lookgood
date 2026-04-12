@@ -1,6 +1,6 @@
 <?php
-session_start();
-$isLoggedIn = isset($_SESSION['user_id']);
+require_once __DIR__ . '/../../session_bootstrap.php';
+$isLoggedIn = isset($_SESSION['user_id']) && (($_SESSION['role'] ?? 'user') !== 'admin');
 $username = $isLoggedIn ? htmlspecialchars($_SESSION['first_name'] ?? $_SESSION['email']) : '';
 ?>
 
@@ -483,7 +483,18 @@ $username = $isLoggedIn ? htmlspecialchars($_SESSION['first_name'] ?? $_SESSION[
     </div>
   </footer>
 
-  <script src="../../Actions/User/chatbot.js"></script>
+  <script>
+    window.LG_CHAT_USER = <?= json_encode([
+      'isLoggedIn' => $isLoggedIn,
+      'userId' => $_SESSION['user_id'] ?? null,
+      'firstName' => $_SESSION['first_name'] ?? '',
+      'lastName' => $_SESSION['last_name'] ?? '',
+      'email' => $_SESSION['email'] ?? '',
+      'role' => $_SESSION['role'] ?? ''
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+  </script>
+
+  <script src="../../Actions/User/chatbot.js?v=20260412a"></script>
   <script src="../../Actions/User/cart-standalone.js"></script>
   <script src="../../Actions/User/index.js"></script>
 </body>

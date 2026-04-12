@@ -1,7 +1,9 @@
 <?php
-session_start();
-$isLoggedIn = isset($_SESSION['user_id']);
+require_once __DIR__ . '/../../session_bootstrap.php';
+$isLoggedIn = isset($_SESSION['user_id']) && (($_SESSION['role'] ?? 'user') !== 'admin');
 $username = $isLoggedIn ? htmlspecialchars($_SESSION['first_name'] ?? $_SESSION['email']) : '';
+$profileDisplay = $isLoggedIn ? '' : 'display:none;';
+$guestDisplay = $isLoggedIn ? 'display:none;' : '';
 ?>
 
 <!DOCTYPE html>
@@ -81,15 +83,15 @@ $username = $isLoggedIn ? htmlspecialchars($_SESSION['first_name'] ?? $_SESSION[
             <div class="nav-dropdown nav-dropdown--right">
 
               <!-- Guest: not logged in -->
-              <div class="nav-dropdown-section" id="profileGuestLinks">
+              <div class="nav-dropdown-section" id="profileGuestLinks" style="<?= $guestDisplay ?>">
                 <span class="nav-dropdown-label">User Profile</span>
-                <a href="../Login/login.html" class="nav-dropdown-link">Log In</a>
-                <a href="../Register/register.html" class="nav-dropdown-link">Sign Up</a>
+                <a href="../Login/user-login.php" class="nav-dropdown-link">Log In</a>
+                <a href="../Register/user-signup.php" class="nav-dropdown-link">Sign Up</a>
               </div>
 
               <!-- User: logged in -->
-              <div class="nav-dropdown-section" id="profileUserLinks" style="display:none;">
-                <span class="nav-dropdown-label" id="profileUsername" style="color:#999; font-size:13px; padding: 8px 12px;">@username</span>
+              <div class="nav-dropdown-section" id="profileUserLinks" style="<?= $profileDisplay ?>">
+                <span class="nav-dropdown-label" id="profileUsername" style="color:#999; font-size:13px; padding: 8px 12px;"><?= $username ?></span>
                 <a href="../Profile/myprofile.php" class="nav-dropdown-link">My Profile</a>
                 <div class="nav-dropdown-divider"></div>
                 <a href="../logout.php" class="nav-dropdown-link" id="signOutBtn">Sign Out</a>
@@ -200,7 +202,17 @@ $username = $isLoggedIn ? htmlspecialchars($_SESSION['first_name'] ?? $_SESSION[
 
   <script src="../../Actions/User/products-page.js"></script>
   <script src="../../Actions/User/cart-standalone.js"></script>
-  <script src="../../Actions/User/chatbot.js"></script>
+  <script>
+    window.LG_CHAT_USER = <?= json_encode([
+      'isLoggedIn' => $isLoggedIn,
+      'userId' => $_SESSION['user_id'] ?? null,
+      'firstName' => $_SESSION['first_name'] ?? '',
+      'lastName' => $_SESSION['last_name'] ?? '',
+      'email' => $_SESSION['email'] ?? '',
+      'role' => $_SESSION['role'] ?? ''
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+  </script>
+  <script src="../../Actions/User/chatbot.js?v=20260412a"></script>
   <script src="../../../Homepage/index.js"></script>
 </body>
 </html>

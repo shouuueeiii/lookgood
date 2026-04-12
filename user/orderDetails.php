@@ -1,5 +1,6 @@
 <?php
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 require_once '../config.php';
 require_once '../auth_user.php';
 requireUser();
@@ -23,13 +24,11 @@ SELECT
     o.created_at AS order_date,
     o.full_name,
     o.phone,
-    o.province,
-    o.city,
-    o.barangay,
-    o.street
+    o.address,
+    o.zip
 FROM checkOut o
 INNER JOIN order_items oi ON oi.order_id = o.order_id
-INNER JOIN products p ON oi.product_id = p.id
+INNER JOIN products p ON oi.product_id = p.product_id
 WHERE o.user_id = ? AND o.order_id = ?
 ";
 
@@ -100,7 +99,8 @@ foreach ($order_items as $item):
 <p>
 <strong>Name:</strong> <?= htmlspecialchars($first_row['full_name']) ?><br>
 <strong>Phone:</strong> <?= htmlspecialchars($first_row['phone']) ?><br>
-<strong>Address:</strong> <?= htmlspecialchars($first_row['street'] . ', ' . $first_row['barangay'] . ', ' . $first_row['city'] . ', ' . $first_row['province']) ?>
+<strong>Address:</strong> <?= htmlspecialchars($first_row['address'] ?? '') ?><br>
+<strong>ZIP:</strong> <?= htmlspecialchars($first_row['zip'] ?? '') ?>
 </p>
 
 <br>

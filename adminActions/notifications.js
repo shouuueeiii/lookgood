@@ -225,6 +225,8 @@
                 return `/order/order.html?source=notification&action=open-order&orderId=${encodeURIComponent(orderId || '')}&focus=return&details=${encodeURIComponent(notification.message || '')}`;
             case 'stock':
                 return `/product/product.html?source=notification&tab=inventory&productId=${encodeURIComponent(productId || '')}`;
+               case 'message':
+                   return `messages.php?source=notification&category=inbox&conversationId=${encodeURIComponent((notification.data && notification.data.senderId) || '')}`;
             default:
                 return '/dashboard/dashboard.html';
         }
@@ -449,7 +451,7 @@
 
         if (confirmLogout) {
             confirmLogout.addEventListener('click', () => {
-                window.location.href = '/login/login.html';
+                window.location.href = 'logout.php';
             });
         }
     }

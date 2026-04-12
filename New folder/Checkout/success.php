@@ -1,5 +1,7 @@
 <?php
 // success.php
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../../session_bootstrap.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -197,7 +199,6 @@
             padding: 18px 20px;
             margin-bottom: 24px;
         }
-        .info-item {}
         .info-label { font-size: 10px; color: var(--ink-soft); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
         .info-val   { font-size: 13px; font-weight: 500; color: var(--ink); line-height: 1.4; }
 
@@ -395,6 +396,9 @@
     const discount  = order.discount  || 0;
     const tax       = order.tax       || 0;
     const total     = order.total     || 0;
+    const clientOrderRef = order.clientOrderRef || ('LEGACY-' + Date.now().toString(36).toUpperCase());
+    order.clientOrderRef = clientOrderRef;
+    localStorage.setItem('last_order', JSON.stringify(order));
 
     const orderId   = 'LG-' + Date.now().toString(36).toUpperCase().slice(-8);
 
@@ -503,11 +507,60 @@
         </div>
     `;
 
+    // Save order to database if valid
+    if (order && order.items && order.items.length > 0 && clientOrderRef) {
+        persistOrder(order, clientOrderRef);
+    } else {
+        console.warn('Order data incomplete, skipping save:', { order, clientOrderRef });
+    }
+
     // Clear cart & checkout data; keep last_order for this session
     localStorage.removeItem('lookgood_cart');
     localStorage.removeItem('lookgood_buynow');
     localStorage.removeItem('lookgood_checkout_data');
 })();
+
+async function persistOrder(order, clientOrderRef) {
+    const saveKey = 'lookgood_order_saved_' + clientOrderRef;
+    if (localStorage.getItem(saveKey) === '1') {
+        console.log('Order already saved:', clientOrderRef);
+        return;
+    }
+
+    console.log('Attempting to save order:', { order, clientOrderRef, saveKey });
+
+    try {
+        const response = await fetch('save-order.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order })
+        });
+
+        console.log('Save response status:', response.status);
+        
+        const data = await response.json().catch((err) => {
+            console.error('Failed to parse response JSON:', err);
+            return {};
+        });
+        
+        console.log('Save response data:', data);
+        
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || `HTTP ${response.status}: Failed to save order`);
+        }
+
+        localStorage.setItem(saveKey, '1');
+        console.log('Order saved successfully:', data.order_id);
+    } catch (error) {
+        console.error('Order save failed:', error.message || error);
+        // Show error in UI
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = 'position: fixed; top: 10px; right: 10px; background: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px; z-index: 9999; max-width: 400px;';
+        errorDiv.textContent = 'Order save failed: ' + (error.message || 'Unknown error');
+        document.body.appendChild(errorDiv);
+        setTimeout(() => errorDiv.remove(), 10000);
+    }
+}
 
 function esc(str) {
     return String(str).replace(/[&<>"']/g,

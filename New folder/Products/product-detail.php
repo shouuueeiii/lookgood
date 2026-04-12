@@ -1,3 +1,10 @@
+<?php
+require_once __DIR__ . '/../../session_bootstrap.php';
+$isLoggedIn = isset($_SESSION['user_id']) && (($_SESSION['role'] ?? 'user') !== 'admin');
+$username = $isLoggedIn ? htmlspecialchars($_SESSION['first_name'] ?? $_SESSION['email']) : '';
+$profileDisplay = $isLoggedIn ? '' : 'display:none;';
+$guestDisplay = $isLoggedIn ? 'display:none;' : '';
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -57,18 +64,18 @@
             <div class="nav-dropdown nav-dropdown--right">
 
               <!-- Guest: not logged in -->
-              <div class="nav-dropdown-section" id="profileGuestLinks">
+              <div class="nav-dropdown-section" id="profileGuestLinks" style="<?= $guestDisplay ?>">
                 <span class="nav-dropdown-label">User Profile</span>
-                <a href="../Login/login.php" class="nav-dropdown-link">Log In</a>
+                <a href="../Login/user-login.php" class="nav-dropdown-link">Log In</a>
                 <a href="../Register/user-signup.php" class="nav-dropdown-link">Sign Up</a>
               </div>
 
               <!-- User: logged in -->
-              <div class="nav-dropdown-section" id="profileUserLinks" style="display:none;">
-                <span class="nav-dropdown-label" id="profileUsername" style="color:#999; font-size:13px; padding: 8px 12px;">@username</span>
+              <div class="nav-dropdown-section" id="profileUserLinks" style="<?= $profileDisplay ?>">
+                <span class="nav-dropdown-label" id="profileUsername" style="color:#999; font-size:13px; padding: 8px 12px;">@<?= $username ?></span>
                 <a href="../Profile/myprofile.php" class="nav-dropdown-link">My Profile</a>
                 <div class="nav-dropdown-divider"></div>
-                <a href="#" class="nav-dropdown-link" id="signOutBtn">Sign Out</a>
+                <a href="../logout.php" class="nav-dropdown-link" id="signOutBtn">Sign Out</a>
               </div>
 
             </div>
@@ -136,8 +143,8 @@
                   id="lensWidth">-</span></span></div>
             <div class="feature-item"><i class="fas fa-weight-hanging"></i><span><strong>Material:</strong> <span
                   id="frameMaterial">-</span></span></div>
-            <div class="feature-item"><i class="fas fa-palette"></i><span><strong>Color:</strong> <span
-                  id="frameColor">-</span></span></div>
+            <div class="feature-item"><i class="fas fa-palette"></i><span><strong>Frame Color:</strong> <span
+              id="frameColor">-</span></span></div>
           </div>
 
           <!-- Qty with stock info -->

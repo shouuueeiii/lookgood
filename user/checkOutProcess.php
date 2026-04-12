@@ -1,5 +1,6 @@
 <?php
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 require_once '../config.php';
 require_once '../auth_user.php';
 requireUser();

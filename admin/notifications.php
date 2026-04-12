@@ -1,11 +1,7 @@
 <?php
-session_start();
 require_once '../config.php';
 require_once '../auth_admin.php';
-if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !== 'admin') {
-    header("Location: ../index.php");
-    exit();
-}
+requireAdmin('../index.php');
 ?>
 
 <!DOCTYPE html>
@@ -256,7 +252,6 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
         </div>
     </div>
 
-    <script src="../global/notifications.js"></script>
-    <script src="/global/global.js"></script>
+    <script src="../adminActions/global.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/global.js')); ?>"></script>
 </body>
 </html>

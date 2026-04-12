@@ -1,12 +1,28 @@
 // Data store (populated from backend)
 const mockData = { orders: [] };
 
+function isLikelyAutofilledEmail(value) {
+    const text = String(value || '').trim();
+    if (!text) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
+}
+
+function clearOrderSearchIfAutofilledEmail() {
+    const searchInput = document.getElementById('orderSearchInput');
+    if (!searchInput) return;
+
+    if (isLikelyAutofilledEmail(searchInput.value)) {
+        searchInput.value = '';
+    }
+}
+
 // Load orders from backend
 function loadOrders() {
     fetch('../adminBack_end/orders.php')
         .then(res => res.json())
         .then(data => {
             mockData.orders = data;
+            clearOrderSearchIfAutofilledEmail();
             updateOrderStats();
             updatePaymentStats();
             renderOrders();
@@ -27,15 +43,26 @@ function getActionButton(orderId, status) {
     const step = statusWorkflow[status];
     if (!step) return ''; // no action
     return `
-        <button class="btn-action ${step.btnClass} action-btn"
+        <button type="button" class="btn-action ${step.btnClass} action-btn"
                 data-id="${orderId}"
                 data-next="${step.next}"
                 data-confirm-class="confirm-${step.next.toLowerCase()}"
+                onclick="openAdminOrderProcess('${orderId}', '${step.next}', 'confirm-${step.next.toLowerCase()}')"
                 title="Mark as ${step.next}">
             <i class="fas ${step.icon}"></i> ${step.label}
         </button>
     `;
 }
+
+window.openAdminOrderModal = function openAdminOrderModal(orderId) {
+    const order = mockData.orders.find(o => String(o.id) === String(orderId));
+    if (order) openOrderModal(order);
+};
+
+window.openAdminOrderProcess = function openAdminOrderProcess(orderId, nextStatus, confirmClass) {
+    const order = mockData.orders.find(o => String(o.id) === String(orderId));
+    if (order) openConfirmModal(order, nextStatus, confirmClass);
+};
 
 
 // Tabs
@@ -121,7 +148,9 @@ function renderOrders() {
     const tableBody = document.querySelector('#ordersTable tbody');
     if (!tableBody) return;
 
-    const search      = (document.getElementById('orderSearchInput')?.value || '').toLowerCase();
+    const searchInput = document.getElementById('orderSearchInput');
+    const searchRaw   = String(searchInput?.value || '').trim();
+    const search      = isLikelyAutofilledEmail(searchRaw) ? '' : searchRaw.toLowerCase();
     const orderStatus = document.getElementById('orderStatusFilter')?.value;
 
     const filtered = mockData.orders.filter(o => {
@@ -145,7 +174,7 @@ function renderOrders() {
             <td>${o.date}</td>
             <td><strong>₱${o.total.toFixed(2)}</strong></td>
             <td class="actions-cell">
-                <button class="btn btn-secondary btn-sm view-order-btn" data-id="${o.id}" title="View details">
+                <button type="button" class="btn btn-secondary btn-sm view-order-btn" data-id="${o.id}" onclick="openAdminOrderModal('${o.id}')" title="View details">
                     <i class="fas fa-eye"></i>
                 </button>
                 ${getActionButton(o.id, o.status)}
@@ -159,7 +188,6 @@ function renderOrders() {
         page => { currentOrdersPage = page; renderOrders(); }
     );
 
-    attachOrderButtons();
 }
 
 
@@ -204,37 +232,6 @@ function renderPayments() {
         currentPaymentsPage, totalPages,
         page => { currentPaymentsPage = page; renderPayments(); }
     );
-
-    attachPaymentButtons();
-}
-
-
-// Attach button listeners
-function attachOrderButtons() {
-    // view order
-    document.querySelectorAll('#ordersTable .view-order-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const order = mockData.orders.find(o => o.id === btn.dataset.id);
-            if (order) openOrderModal(order);
-        });
-    });
-
-    // action button (process / ship / delivered)
-    document.querySelectorAll('#ordersTable .action-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const order = mockData.orders.find(o => o.id === btn.dataset.id);
-            if (order) openConfirmModal(order, btn.dataset.next, btn.dataset.confirmClass);
-        });
-    });
-}
-
-function attachPaymentButtons() {
-    document.querySelectorAll('#paymentsTable .view-payment-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const order = mockData.orders.find(o => o.id === btn.dataset.id);
-            if (order) openPaymentModal(order);
-        });
-    });
 }
 
 
@@ -269,15 +266,6 @@ function openConfirmModal(order, nextStatus) {
 
     // Replace onclick each time to avoid stacking listeners
     confirmModalBtn.onclick = () => {
-        const prevStatus = order.status;
-        order.status = nextStatus;
-        confirmModal.classList.remove('show');
-        updateOrderStats();
-        updatePaymentStats();
-        renderOrders();
-        renderPayments();
-        showToast(`${order.id} marked as ${nextStatus}`);
-
         // Persist to backend
         fetch('../adminBack_end/orders.php', {
             method: 'POST',
@@ -286,15 +274,19 @@ function openConfirmModal(order, nextStatus) {
         })
         .then(res => res.json())
         .then(data => {
-            if (!data.success) {
-                order.status = prevStatus; // rollback
-                updateOrderStats(); updatePaymentStats(); renderOrders(); renderPayments();
+            if (data.success) {
+                order.status = nextStatus;
+                confirmModal.classList.remove('show');
+                updateOrderStats();
+                updatePaymentStats();
+                renderOrders();
+                renderPayments();
+                showToast(`${order.id} marked as ${nextStatus}`);
+            } else {
                 alert('Status update failed on server.');
             }
         })
         .catch(() => {
-            order.status = prevStatus; // rollback on network error
-            updateOrderStats(); updatePaymentStats(); renderOrders(); renderPayments();
             alert('Network error: status not saved.');
         });
     };
@@ -320,27 +312,79 @@ document.getElementById('closeOrderModal').addEventListener('click', () => order
 orderModal.addEventListener('click', e => { if (e.target === orderModal) orderModal.classList.remove('show'); });
 
 function openOrderModal(order) {
-    // header banner
-    document.getElementById('modalHeaderCustomer').textContent     = order.customerName;
-    document.getElementById('modalHeaderOrderID').textContent      = order.id;
+    if (!orderModal) return;
 
-    // status badge
+    const toMoney = (value) => `₱${Number(value || 0).toFixed(2)}`;
+    const setText = (id, value) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    };
+
+    const rawAddress = String(order.shippingAddress || '').trim();
+    const addressParts = rawAddress ? rawAddress.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const addressLine1 = order.addressLine1 || addressParts[0] || rawAddress || '—';
+    const city = order.city || addressParts[1] || '—';
+    const province = order.province || addressParts[2] || '—';
+    const region = order.region || addressParts[3] || '—';
+    const shippingFee = Number(order.shippingFee || 0);
+    const subtotal = Math.max(0, Number(order.total || 0) - shippingFee);
+
+    setText('modalCustomerName', order.customerName || '—');
+    setText('modalHeaderOrderID', order.id || '—');
+    setText('modalOrderID', order.id || '—');
+    setText('modalCustomerEmail', order.customerEmail || '—');
+    setText('modalCustomerPhone', order.customerPhone || '—');
+    setText('modalPaymentMethodOrder', order.paymentMethod || '—');
+    setText('modalShippingMethod', order.shippingMethod || 'Standard Delivery');
+    setText('modalTotalAmount', toMoney(order.total));
+    setText('modalPaymentStatus', order.paymentStatus || '—');
+    setText('modalShippingFullName', order.customerName || '—');
+    setText('modalShippingPhone', order.customerPhone || '—');
+    setText('modalAddressLine1', addressLine1);
+    setText('modalAddressLine2', order.shippingAddress2 || '—');
+    setText('modalCity', city);
+    setText('modalProvince', province);
+    setText('modalZip', order.zip || '—');
+    setText('modalRegion', region);
+    setText('modalDeliveryNote', order.deliveryNote || '—');
+    setText('modalCourierName', order.shippingMethod || 'Standard Delivery');
+    setText('modalEstimatedDelivery', order.estimatedDelivery || '—');
+    setText('modalTrackingNumber', order.trackingNumber || '—');
+    setText('modalSubtotal', toMoney(subtotal));
+    setText('modalShippingFee', toMoney(shippingFee));
+
     const statusEl = document.getElementById('modalOrderStatus');
-    statusEl.textContent = order.status;
-    statusEl.className   = `om-status-badge ${order.status.toLowerCase()}`;
+    if (statusEl) {
+        statusEl.textContent = order.status;
+        statusEl.className   = `om-status-badge ${String(order.status || '').toLowerCase()}`;
+    }
 
-    // summary
-    document.getElementById('modalSummaryAmount').textContent      = `₱${order.total.toFixed(2)}`;
-    document.getElementById('modalSummaryDate').textContent        = order.date;
-    document.getElementById('modalSummaryShipping').textContent    = order.shippingMethod;
+    const itemsList = document.getElementById('modalItemsList');
+    if (itemsList) {
+        const items = Array.isArray(order.items) ? order.items : [];
+        itemsList.innerHTML = items.length
+            ? items.map(item => `
+                <div class="om-item-row">
+                    <div class="om-item-thumb" style="width:56px;height:56px;min-width:56px;overflow:hidden;border-radius:8px;">
+                        <img src="${item.image || '/global/jin.jpg'}" alt="${item.name || 'Item'}" style="width:56px;height:56px;object-fit:cover;display:block;">
+                    </div>
+                    <div class="om-item-meta">
+                        <div class="om-item-name">${item.name || 'Item'}</div>
+                        <div class="om-item-qty">Qty: ${item.qty ?? 1}</div>
+                    </div>
+                    <div class="om-item-price">${toMoney(item.price)}</div>
+                </div>
+            `).join('')
+            : `<div class="om-empty-state">${order.product || 'No items available'}</div>`;
+    }
 
-    // fields
-    document.getElementById('modalOrderID').textContent            = order.id;
-    document.getElementById('modalCustomerName').textContent       = order.customerName;
-    document.getElementById('modalProductList').textContent        = order.product;
-    document.getElementById('modalPaymentMethodOrder').textContent = order.paymentMethod;
-    document.getElementById('modalShippingMethod').textContent     = order.shippingMethod;
-    document.getElementById('modalTotalAmount').textContent        = `₱${order.total.toFixed(2)}`;
+    const timeline = document.getElementById('modalTimeline');
+    if (timeline) {
+        timeline.innerHTML = `
+            <div class="om-timeline-entry"><strong>Placed</strong><span>${order.date || '—'}</span></div>
+            <div class="om-timeline-entry"><strong>Status</strong><span>${order.status || '—'}</span></div>
+        `;
+    }
 
     orderModal.classList.add('show');
 }
@@ -377,9 +421,43 @@ document.addEventListener('keydown', e => {
     }
 });
 
+document.getElementById('ordersTable')?.addEventListener('click', (event) => {
+    const viewBtn = event.target.closest('.view-order-btn');
+    if (viewBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        const order = mockData.orders.find(o => o.id === viewBtn.dataset.id);
+        if (order) openOrderModal(order);
+        return;
+    }
+
+    const actionBtn = event.target.closest('.action-btn');
+    if (actionBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        const order = mockData.orders.find(o => o.id === actionBtn.dataset.id);
+        if (order) openConfirmModal(order, actionBtn.dataset.next, actionBtn.dataset.confirmClass);
+    }
+});
+
+document.getElementById('paymentsTable')?.addEventListener('click', (event) => {
+    const viewBtn = event.target.closest('.view-payment-btn');
+    if (!viewBtn) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    const order = mockData.orders.find(o => o.id === viewBtn.dataset.id);
+    if (order) openPaymentModal(order);
+});
+
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    const orderStatusFilter = document.getElementById('orderStatusFilter');
+    const payStatFilter = document.getElementById('payStatFilter');
+    if (orderStatusFilter) orderStatusFilter.value = '';
+    if (payStatFilter) payStatFilter.value = '';
+
     loadOrders();
 
     ['orderSearchInput', 'orderStatusFilter'].forEach(id => {

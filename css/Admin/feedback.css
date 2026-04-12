@@ -229,7 +229,7 @@
 .feedback-grid {
     padding: 24px;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
 }
 
@@ -241,6 +241,7 @@
     transition: all 0.3s;
     cursor: pointer;
     position: relative;
+    min-width: 0;
 }
 
 .feedback-item:hover {
@@ -281,6 +282,7 @@
     font-size: 15px;
     font-weight: 600;
     color: var(--text-primary);
+    overflow-wrap: anywhere;
 }
 
 .feedback-user-info p {
@@ -306,6 +308,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    overflow-wrap: anywhere;
 }
 
 .feedback-product i {
@@ -317,6 +320,7 @@
     line-height: 1.6;
     color: var(--text-primary);
     margin-bottom: 16px;
+    overflow-wrap: anywhere;
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;

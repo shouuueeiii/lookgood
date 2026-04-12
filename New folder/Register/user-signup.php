@@ -169,6 +169,6 @@ session_start();
       </div>
     </div>
   </div>
-  <script src="../../Actions/User/user-signup.js"></script>
+  <script src="../../Actions/User/user-signup.js?v=20260412a"></script>
 </body>
 </html>

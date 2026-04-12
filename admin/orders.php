@@ -1,11 +1,7 @@
 <?php
-session_start();
 require_once '../config.php';
 require_once '../auth_admin.php';
-if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !== 'admin') {
-    header("Location: ../index.php");
-    exit();
-}
+requireAdmin('../index.php');
 ?>
 
 <!DOCTYPE html>
@@ -14,9 +10,9 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Orders | Look Good Frames Admin</title>
-        <link rel="stylesheet" href="../css/Admin/global.css">
-        <link rel="stylesheet" href="../css/Admin/notifications.css">
-        <link rel="stylesheet" href="../css/Admin/orders.css">
+        <link rel="stylesheet" href="../css/Admin/global.css?v=20260411c">
+        <link rel="stylesheet" href="../css/Admin/notifications.css?v=20260411c">
+        <link rel="stylesheet" href="../css/Admin/orders.css?v=20260411c">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
 
@@ -649,8 +645,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
             <span id="toastMessage"></span>
         </div>
 
-        <script src="../adminActions/notifications.js"></script>
-        <script src="../adminActions/orders.js"></script>
-        <script src="../adminActions/global.js"></script>
+        <script src="../adminActions/orders.js?v=20260411c"></script>
+        <script src="../adminActions/global.js?v=20260411c"></script>
     </body>
 </html>

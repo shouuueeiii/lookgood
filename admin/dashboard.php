@@ -1,11 +1,7 @@
 <?php
-session_start();
 require_once '../config.php';
 require_once '../auth_admin.php';
-if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !== 'admin') {
-    header("Location: ../index.php");
-    exit();
-}
+requireAdmin('../index.php');
 if(isset($_SESSION['email'])){
     $username = $_SESSION['first_name'] . ' ' . $_SESSION['last_name'] ?? null;
 }
@@ -17,9 +13,9 @@ if(isset($_SESSION['email'])){
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard</title>
-        <link rel="stylesheet" href="../css/Admin/global.css">
-        <link rel="stylesheet" href="../css/Admin/notifications.css">
-        <link rel="stylesheet" href="../css/Admin/dashboard.css">
+        <link rel="stylesheet" href="../css/Admin/global.css?v=<?= urlencode((string)@filemtime(__DIR__ . '/../css/Admin/global.css')); ?>">
+        <link rel="stylesheet" href="../css/Admin/notifications.css?v=<?= urlencode((string)@filemtime(__DIR__ . '/../css/Admin/notifications.css')); ?>">
+        <link rel="stylesheet" href="../css/Admin/dashboard.css?v=<?= urlencode((string)@filemtime(__DIR__ . '/../css/Admin/dashboard.css')); ?>">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     </head>
@@ -85,7 +81,7 @@ if(isset($_SESSION['email'])){
                 </li>
 
                 <li class="nav-item">
-                    <a href="setting.php" class="nav-link">
+                    <a href="settings.php" class="nav-link">
                         <i class="fas fa-cog"></i>
                         <span>Setting</span>
                     </a>
@@ -173,10 +169,10 @@ if(isset($_SESSION['email'])){
                             </div>
 
                             <div class="stat-info">
-                                <div class="stat-value">143</div>
+                                <div class="stat-value" id="dashboardTotalProducts">0</div>
                                 <div class="stat-label">Total Products</div>
-                                <div class="stat-change">
-                                     <i class="fas fa-arrow-up"></i> 17%
+                                <div class="stat-change" id="dashboardTrendProducts">
+                                     <i class="fas fa-minus"></i> 0%
                                 </div>
                             </div>
                         </div>
@@ -189,10 +185,10 @@ if(isset($_SESSION['email'])){
                             </div>
 
                             <div class="stat-info">
-                                <div class="stat-value">143</div>
+                                <div class="stat-value" id="dashboardTotalOrders">0</div>
                                 <div class="stat-label">Total Orders</div>
-                                <div class="stat-change">
-                                     <i class="fas fa-arrow-up"></i> 17%
+                                <div class="stat-change" id="dashboardTrendOrders">
+                                     <i class="fas fa-minus"></i> 0%
                                 </div>
                             </div>
                         </div>
@@ -205,10 +201,10 @@ if(isset($_SESSION['email'])){
                             </div>
 
                             <div class="stat-info">
-                                <div class="stat-value">143</div>
+                                <div class="stat-value" id="dashboardTotalUsers">0</div>
                                 <div class="stat-label">Total Users</div>
-                                <div class="stat-change">
-                                     <i class="fas fa-arrow-up"></i> 17%
+                                <div class="stat-change" id="dashboardTrendUsers">
+                                     <i class="fas fa-minus"></i> 0%
                                 </div>
                             </div>
                         </div>
@@ -221,10 +217,10 @@ if(isset($_SESSION['email'])){
                             </div>
 
                             <div class="stat-info">
-                                <div class="stat-value">143</div>
+                                <div class="stat-value" id="dashboardTotalRevenue">P0.00</div>
                                 <div class="stat-label">Total revenue</div>
-                                <div class="stat-change">
-                                     <i class="fas fa-arrow-up"></i> 17%
+                                <div class="stat-change" id="dashboardTrendRevenue">
+                                     <i class="fas fa-minus"></i> 0%
                                 </div>
                             </div>
                         </div>
@@ -402,8 +398,7 @@ if(isset($_SESSION['email'])){
         </div>
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="../adminActions/global.js"></script>
-        <script src="../adminActions/notifications.js"></script>
-        <script src="../adminActions/dashboard.js"></script>
+        <script src="../adminActions/global.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/global.js')); ?>"></script>
+        <script src="../adminActions/dashBoard.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/dashBoard.js')); ?>"></script>
     </body>
 </html>

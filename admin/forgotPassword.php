@@ -1,13 +1,8 @@
 <?php
-session_start();
-
 require_once '../config.php';
 require_once '../auth_admin.php';
 
-if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !== 'admin') {
-    header("Location: ../index.php");
-    exit();
-}
+requireAdmin('../index.php');
 ?>
 
 

@@ -1,13 +1,9 @@
 <?php
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 require_once '../config.php';
 require_once '../auth_user.php';
 requireUser();
-
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
-    header("Location: ../index.php");
-    exit();
-}
 
 $user_id    = $_SESSION['user_id'];
 $product_id = $_POST['product_id'] ?? '';

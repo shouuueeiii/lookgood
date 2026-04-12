@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../../session_bootstrap.php';
 require_once '../../config.php';
 
 $error = '';
@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit();
         }
         if($emailOrUsername === ADMIN_EMAIL && password_verify($password, ADMIN_PASSWORD)) {
+          lg_switch_session_scope('admin');
             session_regenerate_id(true);
 
             $_SESSION['user_id']    = 0; 
@@ -61,13 +62,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Invalid email/username or password.';
             } else {
                 // Normal login success
+              lg_switch_session_scope('user');
                 $_SESSION['user_id']    = $user['user_id'];
                 $_SESSION['first_name'] = $user['first_name'];
                 $_SESSION['last_name']  = $user['last_name'];
                 $_SESSION['email']      = $user['email'];
                 $_SESSION['role']       = $user['role'];
 
+              $redirect = trim((string)($_SESSION['redirect_after_login'] ?? ''));
+              unset($_SESSION['redirect_after_login']);
+              if ($redirect !== '' && strpos($redirect, '/lookgood/') !== false) {
+                header('Location: ' . $redirect);
+              } else {
                 header('Location: ../Homepage/index.php');
+              }
                 exit;
             }
         }
@@ -123,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <label class="remember-me">
             <input type="checkbox" name="remember"> Remember me
           </label>
-          <a href="#" class="forgot-link">Forgot password?</a>
+          <a href="forgot-password.php?fresh=1" class="forgot-link">Forgot password?</a>
         </div>
 
         <div id="formFeedback" class="error-message <?= $error ? 'show' : '' ?>">

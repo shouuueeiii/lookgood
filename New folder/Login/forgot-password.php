@@ -13,6 +13,17 @@ $step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
 $email_input = $_POST['email'] ?? $_GET['email'] ?? '';
 $showSuccess = false;
 
+// Ensure the reset table exists before any cleanup or OTP work runs.
+function ensurePasswordResetTable($conn) {
+    $sql = "CREATE TABLE IF NOT EXISTS password_resets (
+                email VARCHAR(255) NOT NULL PRIMARY KEY,
+                otp VARCHAR(6) NOT NULL,
+                expires INT NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+    $conn->query($sql);
+}
+
 // Clean expired OTPs
 function cleanupExpiredOTPs($conn) {
     $stmt = $conn->prepare("DELETE FROM password_resets WHERE expires < ?");
@@ -21,6 +32,7 @@ function cleanupExpiredOTPs($conn) {
     $stmt->execute();
     $stmt->close();
 }
+ensurePasswordResetTable($conn);
 cleanupExpiredOTPs($conn);
 
 // Handle POST

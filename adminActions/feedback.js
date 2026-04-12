@@ -1,96 +1,5 @@
-// Feedback data
-const feedbacks = [
-    { 
-        id: 1, 
-        customer: "Ericakes Ramirez", 
-        product: "Classic Round Frames", 
-        rating: 5, 
-        comment: "Excellent quality! The frames are exactly as described and the fit is perfect. Very satisfied with my purchase.", 
-        date: "2026-04-02", 
-        reply: "" 
-    },
-    { 
-        id: 2, 
-        customer: "Eds Sedrik", 
-        product: "Modern Square Frames", 
-        rating: 3, 
-        comment: "Average quality. The product is okay but could be better for the price.", 
-        date: "2026-04-01", 
-        reply: "" 
-    },
-    { 
-        id: 3, 
-        customer: "Pollyne Anne", 
-        product: "Aviator Sunglasses", 
-        rating: 4, 
-        comment: "Good product overall. Stylish design and comfortable to wear.", 
-        date: "2026-03-31", 
-        reply: "" 
-    },
-    { 
-        id: 4, 
-        customer: "Aarhon Bautista", 
-        product: "Vintage Cat Eye", 
-        rating: 5, 
-        comment: "Very good! Love the retro style and the quality is top-notch.", 
-        date: "2026-03-30", 
-        reply: "" 
-    },
-    { 
-        id: 5, 
-        customer: "Maria Santos", 
-        product: "Designer Metal Frames", 
-        rating: 2, 
-        comment: "Not satisfied with the durability. The frame feels a bit flimsy.", 
-        date: "2026-03-29", 
-        reply: "" 
-    },
-    { 
-        id: 6, 
-        customer: "John Dela Cruz", 
-        product: "Sport Wrap Frames", 
-        rating: 4, 
-        comment: "Works well for sports activities. Comfortable and stays in place.", 
-        date: "2026-03-28", 
-        reply: "" 
-    },
-    { 
-        id: 7, 
-        customer: "Anna Mae", 
-        product: "Classic Round Frames", 
-        rating: 5, 
-        comment: "Perfect! Exactly what I was looking for. Fast delivery too!", 
-        date: "2026-03-27", 
-        reply: "" 
-    },
-    { 
-        id: 8, 
-        customer: "Robert Chen", 
-        product: "Modern Square Frames", 
-        rating: 3, 
-        comment: "Decent frames but the color was slightly different from the photos.", 
-        date: "2026-03-26", 
-        reply: "" 
-    },
-    {
-        id: 9,
-        customer: "Sarah Johnson",
-        product: "Aviator Sunglasses",
-        rating: 5,
-        comment: "Amazing! These aviators are perfect for sunny days. Great UV protection.",
-        date: "2026-03-25",
-        reply: ""
-    },
-    {
-        id: 10,
-        customer: "Michael Wong",
-        product: "Vintage Cat Eye",
-        rating: 1,
-        comment: "Very disappointed. The frame broke after just one week of normal use.",
-        date: "2026-03-24",
-        reply: ""
-    }
-];
+const FEEDBACK_API_URL = '../adminBack_end/feedbackAPI.php';
+let feedbacks = [];
 
 // Reply templates
 const replyTemplates = {
@@ -102,10 +11,10 @@ const replyTemplates = {
 };
 
 // Global vars
-let currentPage = 1;
+let feedbackCurrentPage = 1;
 const itemsPerPage = 6;
 let selectedFeedbackId = null;
-let filteredFeedbacks = [...feedbacks];
+let filteredFeedbacks = [];
 
 // DOM elements
 const feedbackGrid = document.getElementById("feedbackGrid");
@@ -122,6 +31,8 @@ const repliedCountEl = document.getElementById("repliedCount");
 const feedbackModal = document.getElementById("feedbackModal");
 const adminReplyInput = document.getElementById("adminReplyInput");
 const sendReplyBtn = document.getElementById("sendReplyBtn");
+const closeFeedbackModalBtn = document.getElementById("closeFeedbackModalBtn");
+const useTemplateBtn = document.getElementById("useTemplateBtn");
 
 // Utility functions
 function renderStars(rating) {
@@ -144,6 +55,9 @@ function getInitials(name) {
 
 function formatDate(dateStr) {
     const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) {
+        return "Unknown date";
+    }
     const options = { month: 'short', day: 'numeric', year: 'numeric' };
     return date.toLocaleDateString('en-US', options);
 }
@@ -163,9 +77,10 @@ function filterFeedbacks() {
     const selectedToDate = dateToFilter.value;
 
     filteredFeedbacks = feedbacks.filter(f => {
-        const matchesSearch = f.customer.toLowerCase().includes(searchText) || 
-                            f.product.toLowerCase().includes(searchText) ||
-                            f.comment.toLowerCase().includes(searchText);
+        const customer = String(f.customer || '').toLowerCase();
+        const product = String(f.product || '').toLowerCase();
+        const comment = String(f.comment || '').toLowerCase();
+        const matchesSearch = customer.includes(searchText) || product.includes(searchText) || comment.includes(searchText);
         const matchesRating = !selectedRating || f.rating == selectedRating;
         const matchesStatus = !selectedStatus || 
                             (selectedStatus === 'replied' && f.reply) ||
@@ -175,13 +90,14 @@ function filterFeedbacks() {
         return matchesSearch && matchesRating && matchesStatus && matchesFromDate && matchesToDate;
     });
 
-    currentPage = 1;
+    feedbackCurrentPage = 1;
     renderFeedbackGrid();
     updateStats();
 }
 
 // Render feedback grid
 function renderFeedbackGrid() {
+    if (!feedbackGrid || !paginationContainer) return;
     feedbackGrid.innerHTML = "";
 
     if (filteredFeedbacks.length === 0) {
@@ -197,16 +113,21 @@ function renderFeedbackGrid() {
     }
 
     const totalPages = Math.ceil(filteredFeedbacks.length / itemsPerPage);
-    if (currentPage > totalPages) currentPage = totalPages || 1;
+    if (feedbackCurrentPage > totalPages) feedbackCurrentPage = totalPages || 1;
 
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const startIndex = (feedbackCurrentPage - 1) * itemsPerPage;
     const paginatedFeedbacks = filteredFeedbacks.slice(startIndex, startIndex + itemsPerPage);
 
     paginatedFeedbacks.forEach(f => {
+        const safeCustomer = String(f.customer || '').trim() || 'Customer';
+        const safeProduct = String(f.product || '').trim() || 'Product';
+        const safeComment = String(f.comment || '').trim() || 'No comment provided.';
+        const safeRating = Math.max(1, Math.min(5, Number(f.rating) || 1));
+        const safeDate = String(f.date || '');
         const feedbackItem = document.createElement("div");
         feedbackItem.className = "feedback-item";
         feedbackItem.dataset.feedbackId = String(f.id);
-        feedbackItem.onclick = () => openFeedbackModal(f.id);
+        feedbackItem.addEventListener('click', () => openFeedbackModal(f.id));
         
         const hasReply = f.reply && f.reply.trim() !== "";
         const statusClass = hasReply ? "replied" : "pending";
@@ -216,34 +137,44 @@ function renderFeedbackGrid() {
         feedbackItem.innerHTML = `
             <div class="feedback-item-header">
                 <div class="feedback-user">
-                    <div class="feedback-avatar">${getInitials(f.customer)}</div>
+                    <div class="feedback-avatar">${getInitials(safeCustomer)}</div>
                     <div class="feedback-user-info">
-                        <h4>${escapeHtml(f.customer)}</h4>
-                        <p>${formatDate(f.date)}</p>
+                        <h4>${escapeHtml(safeCustomer)}</h4>
+                        <p>${formatDate(safeDate)}</p>
                     </div>
                 </div>
-                <div class="feedback-rating">${renderStars(f.rating)}</div>
+                <div class="feedback-rating">${renderStars(safeRating)}</div>
             </div>
             <div class="feedback-product">
                 <i class="fas fa-box"></i>
-                ${escapeHtml(f.product)}
+                ${escapeHtml(safeProduct)}
             </div>
-            <div class="feedback-comment">${escapeHtml(f.comment)}</div>
+            <div class="feedback-comment">${escapeHtml(safeComment)}</div>
             <div class="feedback-item-footer">
                 <div class="feedback-status ${statusClass}">
                     <i class="fas ${statusIcon}"></i>
                     ${statusText}
                 </div>
-                <div class="feedback-actions" onclick="event.stopPropagation()">
-                    <button class="action-btn" onclick="openFeedbackModal(${f.id})" title="Reply">
+                <div class="feedback-actions">
+                    <button class="action-btn" data-action="reply" title="Reply" type="button">
                         <i class="fas fa-reply"></i>
                     </button>
-                    <button class="action-btn" onclick="openFeedbackModal(${f.id})" title="View Details">
+                    <button class="action-btn" data-action="view" title="View Details" type="button">
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
             </div>
         `;
+
+        const actions = feedbackItem.querySelector('.feedback-actions');
+        if (actions) {
+            actions.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const actionBtn = event.target.closest('button.action-btn');
+                if (!actionBtn) return;
+                openFeedbackModal(f.id);
+            });
+        }
         
         feedbackGrid.appendChild(feedbackItem);
     });
@@ -263,19 +194,19 @@ function renderPagination(totalPages) {
         btn.disabled = disabled;
         if (!disabled) {
             btn.onclick = () => {
-                currentPage = page;
+                feedbackCurrentPage = page;
                 renderFeedbackGrid();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             };
         }
-        if (page === currentPage) btn.classList.add("active");
+        if (page === feedbackCurrentPage) btn.classList.add("active");
         return btn;
     };
 
-    paginationContainer.appendChild(createBtn("<", currentPage - 1, currentPage === 1));
+    paginationContainer.appendChild(createBtn("<", feedbackCurrentPage - 1, feedbackCurrentPage === 1));
 
     const maxVisible = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let startPage = Math.max(1, feedbackCurrentPage - Math.floor(maxVisible / 2));
     let endPage = Math.min(totalPages, startPage + maxVisible - 1);
     if (endPage - startPage < maxVisible - 1) {
         startPage = Math.max(1, endPage - maxVisible + 1);
@@ -285,7 +216,7 @@ function renderPagination(totalPages) {
         paginationContainer.appendChild(createBtn(i, i));
     }
 
-    paginationContainer.appendChild(createBtn(">", currentPage + 1, currentPage === totalPages));
+    paginationContainer.appendChild(createBtn(">", feedbackCurrentPage + 1, feedbackCurrentPage === totalPages));
 }
 
 // Update stats
@@ -329,32 +260,51 @@ function updateRatingDistribution() {
 
 // Open feedback modal
 function openFeedbackModal(id) {
-    selectedFeedbackId = id;
-    const feedback = feedbacks.find(f => f.id === id);
-    if (!feedback) return;
+    if (!feedbackModal) return;
 
-    document.getElementById("modalAvatar").textContent = getInitials(feedback.customer);
-    document.getElementById("modalCustomer").textContent = feedback.customer;
-    document.getElementById("modalDate").textContent = formatDate(feedback.date);
-    document.getElementById("modalProduct").textContent = feedback.product;
-    document.getElementById("modalRating").innerHTML = renderStars(feedback.rating);
-    document.getElementById("modalComment").textContent = feedback.comment;
+    try {
+        selectedFeedbackId = id;
+        const feedback = feedbacks.find(f => f.id === id);
+        if (!feedback) return;
+        const safeCustomer = String(feedback.customer || '').trim() || 'Customer';
+        const safeProduct = String(feedback.product || '').trim() || 'Product';
+        const safeComment = String(feedback.comment || '').trim() || 'No comment provided.';
+        const safeRating = Math.max(1, Math.min(5, Number(feedback.rating) || 1));
 
-    renderAdminReply(feedback);
+        const modalAvatar = document.getElementById("modalAvatar");
+        const modalCustomer = document.getElementById("modalCustomer");
+        const modalDate = document.getElementById("modalDate");
+        const modalProduct = document.getElementById("modalProduct");
+        const modalRating = document.getElementById("modalRating");
+        const modalComment = document.getElementById("modalComment");
+        const replySection = document.getElementById("replySection");
 
-    // hide reply input if already replied
-    const hasReply = feedback.reply && feedback.reply.trim() !== "";
-    document.getElementById("replySection").style.display = hasReply ? "none" : "block";
+        if (modalAvatar) modalAvatar.textContent = getInitials(safeCustomer);
+        if (modalCustomer) modalCustomer.textContent = safeCustomer;
+        if (modalDate) modalDate.textContent = formatDate(feedback.date);
+        if (modalProduct) modalProduct.textContent = safeProduct;
+        if (modalRating) modalRating.innerHTML = renderStars(safeRating);
+        if (modalComment) modalComment.textContent = safeComment;
 
-    // clear textarea
-    adminReplyInput.value = "";
+        renderAdminReply(feedback);
 
-    feedbackModal.classList.add("show");
+        const hasReply = feedback.reply && feedback.reply.trim() !== "";
+        if (replySection) replySection.style.display = hasReply ? "none" : "block";
+
+        if (adminReplyInput) adminReplyInput.value = "";
+
+        feedbackModal.classList.add("show");
+    } catch (error) {
+        console.error('Failed to open feedback modal:', error);
+        showNotification('Unable to open this feedback right now.', 'error');
+        feedbackModal.classList.remove("show");
+    }
 }
 
 // Render admin reply
 function renderAdminReply(feedback) {
     const container = document.getElementById("adminReplyContainer");
+    if (!container) return;
     if (feedback.reply && feedback.reply.trim() !== "") {
         container.innerHTML = `
             <div class="admin-reply-box">
@@ -370,9 +320,26 @@ function renderAdminReply(feedback) {
     }
 }
 
+function refreshFeedbackCard(feedback) {
+    if (!feedbackGrid || !feedback) return;
+
+    const card = feedbackGrid.querySelector(`.feedback-item[data-feedback-id="${feedback.id}"]`);
+    if (!card) return;
+
+    const hasReply = feedback.reply && feedback.reply.trim() !== "";
+    const status = card.querySelector('.feedback-status');
+    if (status) {
+        status.classList.remove('pending', 'replied');
+        status.classList.add(hasReply ? 'replied' : 'pending');
+        status.innerHTML = hasReply
+            ? '<i class="fas fa-check-circle"></i> Replied'
+            : '<i class="fas fa-clock"></i> Pending Reply';
+    }
+}
+
 // Close feedback modal
 function closeFeedbackModal() {
-    feedbackModal.classList.remove("show");
+    if (feedbackModal) feedbackModal.classList.remove("show");
     selectedFeedbackId = null;
 }
 
@@ -387,7 +354,7 @@ function useTemplate() {
 }
 
 // Send reply
-sendReplyBtn.onclick = function() {
+if (sendReplyBtn) sendReplyBtn.onclick = async function() {
     if (!selectedFeedbackId) return;
 
     const reply = adminReplyInput.value.trim();
@@ -399,31 +366,57 @@ sendReplyBtn.onclick = function() {
     const feedback = feedbacks.find(f => f.id === selectedFeedbackId);
     if (!feedback) return;
 
-    // save reply
+    try {
+        const res = await fetch(FEEDBACK_API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: selectedFeedbackId, reply })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            throw new Error(data.error || 'Failed to save reply');
+        }
+    } catch (error) {
+        console.error('Failed to save reply:', error);
+        showNotification('Failed to save reply to database.', 'error');
+        return;
+    }
+
+    // Update local cache after successful DB write.
     feedback.reply = reply;
 
     // update reply display
     renderAdminReply(feedback);
     document.getElementById("replySection").style.display = "none";
 
-    // refresh page data
-    renderFeedbackGrid();
+    // Keep list stable by updating only the currently visible card.
+    refreshFeedbackCard(feedback);
     updateStats();
 
     showNotification("Reply sent successfully!");
 };
 
 // Event listeners
-searchInput.addEventListener("input", filterFeedbacks);
-ratingFilter.addEventListener("change", filterFeedbacks);
-statusFilter.addEventListener("change", filterFeedbacks);
-dateFromFilter.addEventListener("change", filterFeedbacks);
-dateToFilter.addEventListener("change", filterFeedbacks);
+if (searchInput) searchInput.addEventListener("input", filterFeedbacks);
+if (ratingFilter) ratingFilter.addEventListener("change", filterFeedbacks);
+if (statusFilter) statusFilter.addEventListener("change", filterFeedbacks);
+if (dateFromFilter) dateFromFilter.addEventListener("change", filterFeedbacks);
+if (dateToFilter) dateToFilter.addEventListener("change", filterFeedbacks);
 
 // Close modal when clicking backdrop
-feedbackModal.addEventListener("click", (e) => {
-    if (e.target === feedbackModal) closeFeedbackModal();
-});
+if (feedbackModal) {
+    feedbackModal.addEventListener("click", (e) => {
+        if (e.target === feedbackModal) closeFeedbackModal();
+    });
+}
+
+if (closeFeedbackModalBtn) {
+    closeFeedbackModalBtn.addEventListener('click', closeFeedbackModal);
+}
+
+if (useTemplateBtn) {
+    useTemplateBtn.addEventListener('click', useTemplate);
+}
 
 // Notification system
 function showNotification(message, type = "success") {
@@ -468,7 +461,7 @@ function handleNotificationDeepLink() {
     const index = filteredFeedbacks.findIndex((f) => f.id === feedbackId);
     if (index < 0) return;
 
-    currentPage = Math.floor(index / itemsPerPage) + 1;
+    feedbackCurrentPage = Math.floor(index / itemsPerPage) + 1;
     renderFeedbackGrid();
 
     const targetCard = document.querySelector(`.feedback-item[data-feedback-id="${feedbackId}"]`);
@@ -479,10 +472,53 @@ function handleNotificationDeepLink() {
     openFeedbackModal(feedbackId);
 }
 
+async function loadFeedbacksFromDB() {
+    try {
+        const res = await fetch(`${FEEDBACK_API_URL}?_=${Date.now()}`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+            throw new Error(data.error || 'Failed to load feedback');
+        }
+
+        feedbacks = Array.isArray(data)
+            ? data.map((row) => ({
+                ...row,
+                id: Number(row.id),
+                customer: String(row.customer || 'Customer'),
+                product: String(row.product || 'Product'),
+                comment: String(row.comment || ''),
+                reply: String(row.reply || ''),
+                rating: Number(row.rating || 0),
+                date: String(row.date || '')
+            }))
+            : [];
+        filteredFeedbacks = [...feedbacks];
+    } catch (error) {
+        console.error('Failed to load feedback:', error);
+        feedbacks = [];
+        filteredFeedbacks = [];
+        alert('Unable to load feedback data from the database right now.');
+    }
+}
+
 // Initialize
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    // Keep initial view unfiltered; some browsers autofill this input with email values.
+    if (searchInput) searchInput.value = "";
+    if (ratingFilter) ratingFilter.value = "";
+    if (statusFilter) statusFilter.value = "";
+    if (dateFromFilter) dateFromFilter.value = "";
+    if (dateToFilter) dateToFilter.value = "";
+
+    await loadFeedbacksFromDB();
     renderFeedbackGrid();
     updateStats();
-    initNotifications();
+    if (typeof initNotifications === 'function') {
+        initNotifications();
+    }
     handleNotificationDeepLink();
 });
+
+window.openFeedbackModal = openFeedbackModal;
+window.closeFeedbackModal = closeFeedbackModal;
+window.useTemplate = useTemplate;

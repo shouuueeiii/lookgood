@@ -16,15 +16,23 @@ if ($amount <= 0) {
     exit;
 }
 
-$successUrl = SITE_URL . '/success.php';
-$failedUrl  = SITE_URL . '/cancel.php';   // optional cancel page
+// Build callback base from project root only, never from "New folder" path.
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$scriptPath = trim((string)($_SERVER['SCRIPT_NAME'] ?? '/lookgood/New%20folder/Checkout/create-payment-intent.php'));
 
-$ch = curl_init('https://api.paymongo.com/v1/sources');
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_USERPWD, PAYMONGO_SECRET_KEY . ':');
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+// Example: /lookgood/New%20folder/Checkout/create-payment-intent.php -> /lookgood
+$parts = array_values(array_filter(explode('/', $scriptPath), static function ($p) {
+    return $p !== '';
+}));
+$projectRoot = isset($parts[0]) ? '/' . $parts[0] : '/lookgood';
+
+// PayMongo rejects encoded-space callback URLs, so route through /payment endpoints.
+$callbackBase = $scheme . '://' . $host . $projectRoot . '/payment';
+$successUrl = $callbackBase . '/success.php';
+$failedUrl  = $callbackBase . '/cancel.php';
+
+$payload = json_encode([
     'data' => [
         'attributes' => [
             'amount'   => $amount,
@@ -40,15 +48,41 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
             ]
         ]
     ]
-]));
+]);
 
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
+$response = null;
+$httpCode = 0;
+$curlErr  = '';
+
+// Retry once for transient upstream/network issues.
+for ($attempt = 1; $attempt <= 2; $attempt++) {
+    $ch = curl_init('https://api.paymongo.com/v1/sources');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_USERPWD, PAYMONGO_SECRET_KEY . ':');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 25);
+
+    $response = curl_exec($ch);
+    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr = curl_error($ch);
+    curl_close($ch);
+
+    if ($response !== false && $httpCode === 200) {
+        break;
+    }
+}
 
 if ($httpCode !== 200) {
     http_response_code(500);
-    echo json_encode(['error' => 'PayMongo API error', 'details' => json_decode($response)]);
+    echo json_encode([
+        'error' => 'PayMongo API error',
+        'http_code' => $httpCode,
+        'curl_error' => $curlErr,
+        'details' => json_decode($response, true),
+        'raw_response' => is_string($response) ? $response : null
+    ]);
     exit;
 }
 

@@ -1,11 +1,7 @@
 <?php
-session_start();
 require_once '../config.php';
 require_once '../auth_admin.php';
-if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !== 'admin') {
-    header("Location: ../index.php");
-    exit();
-}
+requireAdmin('../index.php');
 ?>
 
 <!DOCTYPE html>
@@ -73,7 +69,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                 </a>
             </li>
             <li class="nav-item">
-                <a href="setting.php" class="nav-link">
+                <a href="settings.php" class="nav-link">
                     <i class="fas fa-cog"></i>
                     <span>Setting</span>
                 </a>
@@ -123,7 +119,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
 
             <div class="profile-dropdown-container">
                 <div class="profile-trigger" id="profileTrigger">
-                    <img src="/global/pic.png" alt="admin" class="avatar">
+                    <img src="../uploads/logo/lookgood-black.png" alt="admin" class="avatar">
                     <span>Erica R.</span>
                     <i class="fas fa-chevron-down"></i>
                 </div>
@@ -238,7 +234,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                 <div class="card-header">
                     <div class="search-bar2">
                         <i class="fas fa-search"></i>
-                        <input type="text" id="feedbackSearchInput" class="search-input2" placeholder="Search customer name..." name='feedbackSearchInput'>
+                        <input type="text" id="feedbackSearchInput" class="search-input2" placeholder="Search customer name..." name='feedbackSearchInput' autocomplete="off" spellcheck="false" autocapitalize="off">
                     </div>
                     <div class="filter-group">
                         <select id="ratingFilter" class="filter-select">
@@ -286,7 +282,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                     </div>
                 </div>
                 <!-- X close button — always visible -->
-                <button class="close-btn" onclick="closeFeedbackModal()">
+                <button class="close-btn" id="closeFeedbackModalBtn" type="button">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -321,7 +317,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                 </label>
                 <textarea id="adminReplyInput" placeholder="Write your reply here, or click 'Use Template' to load a suggested response..." class="reply-input"></textarea>
                 <div class="reply-actions">
-                    <button class="reply-template-btn" onclick="useTemplate()">
+                    <button class="reply-template-btn" id="useTemplateBtn" type="button">
                         <i class="fas fa-magic"></i> Use Template
                     </button>
                     <button id="sendReplyBtn" class="send-reply-btn">
@@ -350,7 +346,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                     <div class="ep-profile-card">
                         <div class="ep-avatar-wrapper">
                             <div class="ep-avatar-initials" id="epAvatarInitials">ER</div>
-                            <img src="/global/pic.png" alt="Profile" id="epAvatarImg" class="ep-avatar-img" onerror="this.style.display='none'">
+                            <img src="../uploads/logo/lookgood-black.png" alt="Profile" id="epAvatarImg" class="ep-avatar-img" onerror="this.style.display='none'">
                             <label for="profileImageInput" class="ep-avatar-edit" title="Change photo">
                                 <i class="fas fa-pencil-alt"></i>
                             </label>
@@ -436,8 +432,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
             </div>
         </div>
 
-    <script src="../adminActions/notification.js"></script>
-    <script src="../adminActions/feedback.js"></script>
-    <script src="../adminActions/global.js"></script>
+    <script src="../adminActions/feedback.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/feedback.js')); ?>"></script>
+    <script src="../adminActions/global.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/global.js')); ?>"></script>
 </body>
 </html>

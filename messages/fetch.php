@@ -1,6 +1,7 @@
 <?php
 include '../config.php';
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 
 $me = $_SESSION['id'];
 $them = $_GET['other_id'];

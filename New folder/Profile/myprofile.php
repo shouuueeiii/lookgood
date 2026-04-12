@@ -1,3 +1,13 @@
+<?php
+require_once __DIR__ . '/../../session_bootstrap.php';
+
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
+  $_SESSION['redirect_after_login'] = '../Profile/myprofile.php';
+  header('Location: ../Login/user-login.php');
+  exit();
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

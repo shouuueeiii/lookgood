@@ -129,8 +129,8 @@
 /* Product form layout */
 .product-form-layout {
     display: grid;
-    grid-template-columns: 360px 1fr;
-    gap: 40px;
+    grid-template-columns: 300px 1fr;
+    gap: 24px;
     align-items: start;
 }
 
@@ -138,8 +138,8 @@
 #addProductModal .modal-container,
 #editProductModal .modal-container,
 #viewProductModal .modal-container {
-    max-width: 980px;
-    width: 95%;
+    max-width: 860px;
+    width: min(92vw, 860px);
 }
 
 /* Remove scroll from add/edit product modals */
@@ -159,7 +159,7 @@
 /* Add and Edit Product Modal - Apply same spacious layout as view modal */
 #addProductModal .modal-body,
 #editProductModal .modal-body {
-    padding: 24px 36px;
+    padding: 16px 20px;
 }
 
 #addProductModal .modal-body {
@@ -179,18 +179,18 @@
 #editProductModal .product-details-section {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
 }
 
 #addProductModal .product-details-section .form-row,
 #editProductModal .product-details-section .form-row {
     display: flex;
-    gap: 20px;
+    gap: 12px;
 }
 
 #addProductModal .product-details-section .form-group,
 #editProductModal .product-details-section .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 8px;
 }
 
 /* Add and Edit Product Modal - Apply same image styling as view modal */
@@ -209,8 +209,8 @@
 
 #addProductModal .additional-images-row .image-upload-area,
 #editProductModal .additional-images-row .image-upload-area {
-    width: 110px !important;
-    height: 110px !important;
+    width: 86px !important;
+    height: 86px !important;
     border: 1px solid #e5e7eb;
     flex-shrink: 0;
 }
@@ -218,8 +218,8 @@
 #addProductModal .product-image-section > .image-upload-area,
 #editProductModal .product-image-section > .image-upload-area {
     width: 100%;
-    max-width: 380px;
-    height: 380px;
+    max-width: 300px;
+    height: 300px;
     margin: 0 auto;
 }
 
@@ -233,13 +233,13 @@
 #editProductModal .modal-actions {
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 0;
-    padding: 16px 24px;
+    padding: 12px 20px;
 }
 
 /* View Product Modal - Show images properly */
 #viewProductModal .modal-body {
-    padding: 32px 36px;
-    margin-bottom: 16px;
+    padding: 16px 20px;
+    margin-bottom: 8px;
 }
 
 /* Table alignment for products tab */
@@ -318,17 +318,17 @@
 
 #viewProductModal .additional-images-row {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     justify-content: center;
     flex-wrap: nowrap;
-    margin-top: 20px;
+    margin-top: 12px;
     overflow-x: auto;
     padding-bottom: 4px;
 }
 
 #viewProductModal .additional-images-row .image-upload-area {
-    width: 110px !important;
-    height: 110px !important;
+    width: 86px !important;
+    height: 86px !important;
     border: 1px solid #e5e7eb;
     flex-shrink: 0;
 }
@@ -340,33 +340,55 @@
 
 #viewProductModal .product-image-section > .image-upload-area {
     width: 100%;
-    max-width: 380px;
-    height: 380px;
+    max-width: 260px;
+    height: 260px;
     margin: 0 auto;
 }
 
 #viewProductModal .product-details-section {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 10px;
 }
 
 #viewProductModal .product-details-section .form-row {
     display: flex;
-    gap: 20px;
+    gap: 12px;
+}
+
+#viewProductModal .product-details-section .form-row .form-group {
+    flex: 1;
 }
 
 #viewProductModal .product-details-section .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 8px;
 }
 
 #viewProductModal .modal-container {
-    max-height: none;
-    overflow: visible;
+    max-width: 760px;
+    width: min(90vw, 760px);
+    max-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#editProductModal .modal-container {
+    max-width: 760px;
+    width: min(90vw, 760px);
+    max-height: calc(100vh - 120px);
 }
 
 #viewProductModal .modal-body {
-    overflow: visible;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+#viewProductModal {
+    align-items: flex-start;
+    padding: 100px 0 16px;
+    overflow: hidden;
 }
 
 #updateInventoryModal .modal-container {

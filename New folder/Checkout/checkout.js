@@ -210,6 +210,7 @@ function showError(msg) {
         }
 
         const orderInfo = {
+            clientOrderRef: checkoutData.clientOrderRef || null,
             items: checkoutData.items,
             subtotal: checkoutData.subtotal,
             discount: checkoutData.discountAmount,
@@ -225,13 +226,26 @@ function showError(msg) {
         localStorage.setItem('last_order', JSON.stringify(orderInfo));
 
         try {
-            const res = await fetch('create-payment-intent.php', {
+            const paymentIntentUrl = new URL('create-payment-intent.php', window.location.href).href;
+            const res = await fetch(paymentIntentUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ amount: amountCentavos, name: fullName, email })
             });
-            const data = await res.json();
-            if (!res.ok || !data.success) throw new Error(data.error || 'Payment initialization failed.');
+            const rawText = await res.text();
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (parseError) {
+                throw new Error('Unexpected payment response: ' + rawText);
+            }
+            if (!res.ok || !data.success) {
+                const details = data.details?.errors?.map?.(err => err.detail || err.code).filter(Boolean).join('; ');
+                const debug = [details, data.curl_error, data.http_code ? ('HTTP ' + data.http_code) : '']
+                    .filter(Boolean)
+                    .join(' | ');
+                throw new Error(debug ? ((data.error || 'Payment initialization failed.') + ' - ' + debug) : (data.error || 'Payment initialization failed.'));
+            }
             localStorage.removeItem('lookgood_cart');
             localStorage.removeItem('lookgood_buynow');
             localStorage.removeItem('lookgood_checkout_data');

@@ -1,10 +1,9 @@
 <?php
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 include '../config.php';
-session_start();
-if (!isset($_SESSION['email']) || $_SESSION['role'] !== 'user') {
-    header("Location: ../index.php");
-    exit();
-}
+require_once '../auth_user.php';
+requireUser();
 include '../messages/inbox.php';
 ?>
 <!DOCTYPE html>

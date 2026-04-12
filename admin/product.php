@@ -1,11 +1,7 @@
 <?php
-session_start();
 require_once '../config.php';
 require_once '../auth_admin.php';
-if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !== 'admin') {
-    header("Location: ../index.php");
-    exit();
-}
+requireAdmin('../index.php');
 ?>
 
 <!DOCTYPE html>
@@ -14,9 +10,9 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Products | Look Good Frames Admin</title>
-        <link rel="stylesheet" href="../css/Admin/global.css">
-        <link rel="stylesheet" href="../css/Admin/notifications.css">
-        <link rel="stylesheet" href="../css/Admin/product.css">
+        <link rel="stylesheet" href="../css/Admin/global.css?v=<?= urlencode((string)@filemtime(__DIR__ . '/../css/Admin/global.css')); ?>">
+        <link rel="stylesheet" href="../css/Admin/notifications.css?v=<?= urlencode((string)@filemtime(__DIR__ . '/../css/Admin/notifications.css')); ?>">
+        <link rel="stylesheet" href="../css/Admin/product.css?v=<?= urlencode((string)@filemtime(__DIR__ . '/../css/Admin/product.css')); ?>">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
 
@@ -72,7 +68,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="setting.php" class="nav-link">
+                    <a href="settings.php" class="nav-link">
                         <i class="fas fa-cog"></i>
                         <span>Setting</span>
                     </a>
@@ -190,9 +186,9 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                 <div class="card-search-controls">
                                     <div class="card-search-bar">
                                         <i class="fas fa-search"></i>
-                                        <input type="text" id="searchInput" class="card-search-input" placeholder="Search products..." name='searchInput'>
+                                        <input type="text" id="searchInput" class="card-search-input" placeholder="Search products..." name='searchInput' autocomplete="off">
                                     </div>
-                                    <select id="categoryFilter" class="card-filter-input">
+                                    <select id="categoryFilter" class="card-filter-input" autocomplete="off">
                                         <option value="">All Categories</option>
                                         <option value="Women">Women</option>
                                         <option value="Men">Men</option>
@@ -267,7 +263,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                         <div class="form-row">
                                             <div class="form-group">
                                                 <label for="addProductId">Product ID *</label>
-                                                <input type="text" id="addProductId" class="form-input" placeholder="e.g., LGF-001" name='addProductId'>
+                                                <input type="text" id="addProductId" class="form-input" placeholder="e.g., LGF-M-001-26" name='addProductId'>
                                             </div>
                                             <div class="form-group">
                                                 <label for="addProductName">Product Name *</label>
@@ -281,7 +277,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                         <div class="form-row">
                                             <div class="form-group">
                                                 <label for="addCategory">Category *</label>
-                                                <select id="addCategory" class="form-input">
+                                                <select id="addCategory" class="form-input" name = 'addCategory'>
                                                     <option value="">Select Category</option>
                                                     <option value="Men">Men</option>
                                                     <option value="Women">Women</option>
@@ -303,13 +299,29 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                                 <input type="number" id="addFrameWidth" class="form-input" placeholder="140" min="0" step="0.1" name='addFrameWidth'>
                                             </div>
                                             <div class="form-group">
+                                                <label for="addFrameHeight">Frame Height (mm) *</label>
+                                                <input type="number" id="addFrameHeight" class="form-input" placeholder="48" min="0" step="0.1" name='addFrameHeight'>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="addLensWidth">Lens Width (mm) *</label>
+                                                <input type="number" id="addLensWidth" class="form-input" placeholder="52" min="0" step="0.1" name='addLensWidth'>
+                                            </div>
+                                            <div class="form-group">
                                                 <label for="addTempleLength">Temple Length (mm)</label>
                                                 <input type="number" id="addTempleLength" class="form-input" placeholder="145" min="0" step="0.1" name='addTempleLength'>
                                             </div>
                                         </div>
-                                        <div class="form-group">
-                                            <label for="addMaterial">Material</label>
-                                            <input type="text" id="addMaterial" class="form-input" placeholder="e.g., Acetate, Metal, Titanium" name='addMaterial'>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label for="addMaterial">Material</label>
+                                                <input type="text" id="addMaterial" class="form-input" placeholder="e.g., Acetate, Metal, Titanium" name='addMaterial'>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="addColor">Frame Color *</label>
+                                                <input type="text" id="addColor" class="form-input" placeholder="e.g., Matte Black" name='addColor'>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -317,7 +329,6 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                             <div class="modal-actions">
                                 <button class="btn btn-secondary" onclick="closeModal('addProductModal')">Cancel</button>
                                 <button class="btn btn-primary" onclick="addProduct()" id="addProductBtn">
-                                <a href="../adminBack_end/get_products.php">hsfheu</a>
                                     <i class="fas fa-plus"></i> Add Product
                                 </button>
                             </div>
@@ -406,13 +417,29 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                             <input type="number" id="editFrameWidth" class="form-input" placeholder="140" min="0" step="0.1" name='editFrameWidth'>
                                         </div>
                                         <div class="form-group">
+                                            <label for="editFrameHeight">Frame Height (mm) *</label>
+                                            <input type="number" id="editFrameHeight" class="form-input" placeholder="48" min="0" step="0.1" name='editFrameHeight'>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="editLensWidth">Lens Width (mm) *</label>
+                                            <input type="number" id="editLensWidth" class="form-input" placeholder="52" min="0" step="0.1" name='editLensWidth'>
+                                        </div>
+                                        <div class="form-group">
                                             <label for="editTempleLength">Temple Length (mm)</label>
                                             <input type="number" id="editTempleLength" class="form-input" placeholder="145" min="0" step="0.1" name='editTempleLength'>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="editMaterial">Material</label>
-                                        <input type="text" id="editMaterial" class="form-input" placeholder="e.g., Acetate, Metal, Titanium" name='editMaterial'>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="editMaterial">Material</label>
+                                            <input type="text" id="editMaterial" class="form-input" placeholder="e.g., Acetate, Metal, Titanium" name='editMaterial'>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="editColor">Frame Color *</label>
+                                            <input type="text" id="editColor" class="form-input" placeholder="e.g., Matte Black" name='editColor'>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -668,8 +695,8 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                         <div class="form-group">
                             <label for="discountType">Type *</label>
                             <select id="discountType" class="form-input">
-                                <option value="percentage">Percentage (%)</option>
-                                <option value="fixed">Fixed Amount (₱)</option>
+                                <option value="Percentage">Percentage (%)</option>
+                                <option value="Fixed">Fixed Amount (₱)</option>
                             </select>
                         </div>
                     </div>
@@ -1002,13 +1029,29 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                     <input type="text" id="viewFrameWidth" class="form-input" readonly name='viewFrameWidth'>
                                 </div>
                                 <div class="form-group">
+                                    <label>Frame Height (mm)</label>
+                                    <input type="text" id="viewFrameHeight" class="form-input" readonly name='viewFrameHeight'>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Lens Width (mm)</label>
+                                    <input type="text" id="viewLensWidth" class="form-input" readonly name='viewLensWidth'>
+                                </div>
+                                <div class="form-group">
                                     <label>Temple Length (mm)</label>
                                     <input type="text" id="viewTempleLength" class="form-input" readonly name='viewTempleLength'>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>Material</label>
-                                <input type="text" id="viewMaterial" class="form-input" readonly name='viewMaterial'>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Material</label>
+                                    <input type="text" id="viewMaterial" class="form-input" readonly name='viewMaterial'>
+                                </div>
+                                <div class="form-group">
+                                    <label>Frame Color</label>
+                                    <input type="text" id="viewColor" class="form-input" readonly name='viewColor'>
+                                </div>
                             </div>
                             <div class="form-group" id="saleInfoGroup" style="display:none;">
                                 <label>Sale Information</label>
@@ -1076,8 +1119,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
             </div>
         </div>
 
-        <script src="../adminActions/global.js"></script>
-        <script src="../adminActions/notifications.js"></script>
-        <script src="../adminActions/products.js"></script>
+        <script src="../adminActions/global.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/global.js')); ?>"></script>
+        <script src="../adminActions/products.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/products.js')); ?>"></script>
     </body>
 </html>

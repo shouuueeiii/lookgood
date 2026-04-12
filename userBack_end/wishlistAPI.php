@@ -5,7 +5,8 @@
  * Used by: Actions/User/profile-wishlist.js, products-page.js, product-detail.js
  */
 require_once '../config.php';
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 
 header('Content-Type: application/json');
 

@@ -1,5 +1,6 @@
 <?php
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../../session_bootstrap.php';
 
 // Get the pending order data if it exists (from create-payment-intent.php)
 $pendingOrder = $_SESSION['pending_order'] ?? null;

@@ -1,11 +1,7 @@
 <?php
-session_start();
 require_once '../config.php';
 require_once '../auth_admin.php';
-if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !== 'admin') {
-    header("Location: ../index.php");
-    exit();
-}
+requireAdmin('../index.php');
 ?>
 <!DOCTYPE html>
 <html>
@@ -13,9 +9,9 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Settings | Look Good Frames Admin</title>
-        <link rel="stylesheet" href="../css/Admin/global.css">
-        <link rel="stylesheet" href="../css/Admin/notifications.css">
-        <link rel="stylesheet" href="../css/Admin/settings.css">
+        <link rel="stylesheet" href="../css/Admin/global.css?v=<?= urlencode((string)@filemtime(__DIR__ . '/../css/Admin/global.css')); ?>">
+        <link rel="stylesheet" href="../css/Admin/notifications.css?v=<?= urlencode((string)@filemtime(__DIR__ . '/../css/Admin/notifications.css')); ?>">
+        <link rel="stylesheet" href="../css/Admin/setting.css?v=<?= urlencode((string)@filemtime(__DIR__ . '/../css/Admin/setting.css')); ?>">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
 
@@ -327,7 +323,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                 <div class="input-wrapper">
                                     <input type="password" placeholder="Enter current password" id="currentPassword" name='currentPassword'>
                                     <button type="button" class="toggle-password" id="toggleCurrentPassword">
-                                        <i class="fas fa-eye" id="toggleCurrentIcon"></i>
+                                        <i class="fas fa-eye-slash" id="toggleCurrentIcon"></i>
                                     </button>
                                 </div>
                             </div>
@@ -337,7 +333,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                     <div class="input-wrapper">
                                         <input type="password" placeholder="Enter new password" id="newPassword" name='newPassword'>
                                         <button type="button" class="toggle-password" id="toggleNewPassword">
-                                            <i class="fas fa-eye" id="toggleNewIcon"></i>
+                                            <i class="fas fa-eye-slash" id="toggleNewIcon"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -346,7 +342,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                     <div class="input-wrapper">
                                         <input type="password" placeholder="Confirm new password" id="confirmPassword" name='confirmPassword'>
                                         <button type="button" class="toggle-password" id="toggleConfirmPassword">
-                                            <i class="fas fa-eye" id="toggleConfirmIcon"></i>
+                                            <i class="fas fa-eye-slash" id="toggleConfirmIcon"></i>
                                         </button>
                                     </div>
                                 </div>
@@ -1062,8 +1058,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
             </div>
         </div>
 
-        <script src="../adminActions/global.js"></script>
-        <script src="../adminActions/notifications.js"></script>
-        <script src="../adminActions/settings.js"></script>
+        <script src="../adminActions/global.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/global.js')); ?>"></script>
+        <script src="../adminActions/settings.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/settings.js')); ?>"></script>
     </body>
 </html>

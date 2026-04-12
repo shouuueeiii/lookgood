@@ -1,5 +1,6 @@
 <?php
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 require_once '../config.php';
 
 $result = $conn->query("SELECT * FROM products WHERE category = 'male' AND status = 'active' ORDER BY id DESC");

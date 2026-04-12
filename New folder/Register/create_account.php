@@ -4,6 +4,24 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../db.php';
 
+function ensureUsersPhoneColumn(mysqli $conn): void {
+    $check = $conn->prepare("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'phone' LIMIT 1");
+    if (!$check) {
+        return;
+    }
+
+    $check->execute();
+    $check->store_result();
+    $exists = $check->num_rows > 0;
+    $check->close();
+
+    if (!$exists) {
+        $conn->query("ALTER TABLE users ADD COLUMN phone VARCHAR(20) NULL AFTER email");
+    }
+}
+
+ensureUsersPhoneColumn($conn);
+
 $input = json_decode(file_get_contents('php://input'), true);
 $otp_input = trim($input['otp'] ?? '');
 

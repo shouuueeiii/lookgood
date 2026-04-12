@@ -60,15 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = document.getElementById('passwordReg').value;
         const confirm = document.getElementById('confirmReg').value;
 
-        fetch('login-register.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: `firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&confirmPassword=${encodeURIComponent(confirm)}`
-        });
-
-        // Basic checks
+        // Basic checks - VALIDATION FIRST
         if (!firstName || !lastName || !email || !username || !password || !confirm) {
             showError('All fields are required.');
             return;
@@ -84,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Username: at least 3 characters, letters/numbers/underscore
         const usernamePattern = /^[a-zA-Z0-9_]{3,20}$/;
         if (!usernamePattern.test(username)) {
-            showError('Username must be 13–18 characters (letters, numbers, underscore only).');
+            showError('Username must be 3–20 characters (letters, numbers, underscore only).');
             return;
         }
 
@@ -105,19 +97,36 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // If all valid, proceed to redirect (action="../Login/login.html")
-        // You can also add a success message before redirect
-        // For demo, we redirect after a short delay
+        // Update button state
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerText;
         submitBtn.innerText = 'Signing up...';
         submitBtn.disabled = true;
 
-        // Simulate a tiny delay to show feedback (optional)
-        setTimeout(() => {
-            // Redirect to login page as per form action
-            window.location.href = form.action;
-        }, 300);
+        // NOW send the fetch with proper error handling
+        fetch('login-register.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `register=1&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&confirmPassword=${encodeURIComponent(confirm)}`
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network error: ${response.status}`);
+            }
+            return response.text();
+        })
+        .then(data => {
+            // Redirect to login page on success
+            window.location.href = '../Login/login-register.php';
+        })
+        .catch(error => {
+            console.error('Registration error:', error);
+            submitBtn.innerText = originalText;
+            submitBtn.disabled = false;
+            showError('Network error occurred. Please check your connection and try again.');
+        });
     });
 
     // ----- GO BACK BUTTON (enhanced with fallback) -----

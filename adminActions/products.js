@@ -2,6 +2,7 @@
 let currentProductsPage  = 1;
 let currentInventoryPage = 1;
 let currentDiscountsPage = 1;
+let activeProductTab = 'productsTab';
 const itemsPerPage = 5;
 let pendingInventoryHighlightId = null;
 let pendingDiscountHighlightCode = null;
@@ -13,29 +14,152 @@ let currentInventoryId  = null;
 let deleteDiscountId    = null;
 let viewModalImageList  = [];
 let currentViewImageIndex = 0;
-const PRODUCT_ID_PATTERN = /^LGF-\d{3}$/;
-
-// Mock data
+const PRODUCT_ID_PATTERN = /^LGF-[MWU]-\d{3}-\d{2}$/;
+const PRODUCT_ID_YEAR_SUFFIX = '26';
+const CATEGORY_CODE_MAP = {
+    male: 'M',
+    men: 'M',
+    female: 'W',
+    women: 'W',
+    unisex: 'U'
+};
+// In-memory state synchronized with DB APIs
 const mockData = {
-    products: []
+    products: [],
+    discounts: []
 };
 
-function formatProductId(value) {
+function getCategoryCode(value) {
+    const normalized = normalizeCategoryValue(value);
+    return CATEGORY_CODE_MAP[normalized] || '';
+}
+
+function getProductSequence(productId) {
+    const raw = String(productId || '').trim().toUpperCase();
+
+    let match = raw.match(/^LGF-[MWU]-(\d{3})-(\d{2})$/);
+    if (match) return parseInt(match[1], 10) || 0;
+
+    match = raw.match(/^(?:MEN|WOMEN|UNISEX)-?(\d+)$/);
+    if (match) return parseInt(match[1], 10) || 0;
+
+    match = raw.match(/^(?:LGF-)?(\d+)$/);
+    return match ? (parseInt(match[1], 10) || 0) : 0;
+}
+
+function getNextCategorySequence(categoryValue) {
+    const code = getCategoryCode(categoryValue);
+    if (!code) return 0;
+
+    const usedSequences = mockData.products
+        .filter((product) => getCategoryCode(product.category || product.id) === code)
+        .map((product) => getProductSequence(product.id))
+        .filter((seq) => seq > 0);
+
+    return (usedSequences.length ? Math.max(...usedSequences) : 0) + 1;
+}
+
+function generateProductId(categoryValue, sequence = null) {
+    const code = getCategoryCode(categoryValue);
+    if (!code) return '';
+
+    const seq = sequence || getNextCategorySequence(categoryValue);
+    if (!seq) return '';
+
+    return `LGF-${code}-${String(seq).padStart(3, '0')}-${PRODUCT_ID_YEAR_SUFFIX}`;
+}
+
+function formatProductId(value, categoryValue = '') {
     const raw = String(value || '').trim().toUpperCase();
-    if (!raw) return '';
+    const categoryCode = getCategoryCode(categoryValue);
+    if (!raw) return categoryCode ? generateProductId(categoryValue) : '';
 
     if (PRODUCT_ID_PATTERN.test(raw)) return raw;
 
-    const match = raw.match(/^(?:LGF-)?(\d+)$/);
-    if (!match) return raw;
+    const categoryMatch = raw.match(/^(MEN|WOMEN|UNISEX)-?(\d+)$/);
+    if (categoryMatch) {
+        const code = getCategoryCode(categoryMatch[1]);
+        const seq = parseInt(categoryMatch[2], 10) || 0;
+        return code && seq ? `LGF-${code}-${String(seq).padStart(3, '0')}-${PRODUCT_ID_YEAR_SUFFIX}` : raw;
+    }
 
-    return `LGF-${match[1].padStart(3, '0')}`;
+    const prefixedMatch = raw.match(/^LGF-([MWU])-(\d{3})(?:-(\d{2}))?$/);
+    if (prefixedMatch) {
+        return `LGF-${prefixedMatch[1]}-${prefixedMatch[2]}-${prefixedMatch[3] || PRODUCT_ID_YEAR_SUFFIX}`;
+    }
+
+    const match = raw.match(/^(?:LGF-)?(\d+)$/);
+    if (!match) return categoryCode ? generateProductId(categoryValue) : raw;
+
+    if (!categoryCode) return `LGF-${match[1].padStart(3, '0')}`;
+
+    return `LGF-${categoryCode}-${match[1].padStart(3, '0')}-${PRODUCT_ID_YEAR_SUFFIX}`;
+}
+
+function normalizeCategoryValue(value) {
+    const raw = String(value || '').trim().toLowerCase();
+    if (!raw) return '';
+    if (raw === 'men' || raw === 'male') return 'male';
+    if (raw === 'women' || raw === 'female') return 'female';
+    if (raw === 'unisex') return 'unisex';
+    return raw;
+}
+
+function toCategoryLabel(value) {
+    const normalized = normalizeCategoryValue(value);
+    if (normalized === 'male') return 'Men';
+    if (normalized === 'female') return 'Women';
+    if (normalized === 'unisex') return 'Unisex';
+    return value || '—';
+}
+
+function isLikelyAutofilledEmail(value) {
+    const text = String(value || '').trim();
+    if (!text) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
+}
+
+function clearProductSearchIfAutofilledEmail() {
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+
+    if (isLikelyAutofilledEmail(searchInput.value)) {
+        searchInput.value = '';
+    }
+}
+
+function getProductSearchTerm() {
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return '';
+
+    const raw = String(searchInput.value || '').trim();
+    if (isLikelyAutofilledEmail(raw)) {
+        searchInput.value = '';
+        return '';
+    }
+    return raw.toLowerCase();
+}
+
+function renderActiveProductTab() {
+    if (activeProductTab === 'inventoryTab') {
+        renderInventory();
+        return;
+    }
+    if (activeProductTab === 'discountsTab') {
+        renderDiscounts();
+        return;
+    }
+    renderProducts();
 }
 
 function normalizeExistingProductIds() {
     mockData.products.forEach((product) => {
-        product.id = formatProductId(product.id);
+        product.id = formatProductId(product.id, product.category);
     });
+}
+
+function findProductByAnyId(productId) {
+    return mockData.products.find((product) => String(product.id) === String(productId) || String(product.dbId || '') === String(productId));
 }
 
 normalizeExistingProductIds();
@@ -63,8 +187,8 @@ function getDiscountStatus(discount) {
     const start = new Date(discount.startDate);
     const end   = new Date(discount.endDate);
 
-    if (!discount.active)                         return { label: 'Inactive',      cls: 'badge-muted'   };
-    if (discount.usageCount >= discount.usageLimit) return { label: 'Limit Reached', cls: 'badge-purple'  };
+    if (discount.active === false)                return { label: 'Inactive',      cls: 'badge-muted'   };
+    if ((discount.usageCount ?? 0) >= (discount.usageLimit ?? 0) && (discount.usageLimit ?? 0) > 0) return { label: 'Limit Reached', cls: 'badge-purple'  };
     if (now < start)                              return { label: 'Scheduled',     cls: 'badge-info'    };
     if (now > end)                                return { label: 'Expired',       cls: 'badge-danger'  };
 
@@ -83,7 +207,7 @@ function updateDiscountStats() {
         return s.label === 'Active';
     }).length;
     const expiring = list.filter(d => {
-        if (!d.active) return false;
+        if (d.active === false) return false;
         const end = new Date(d.endDate);
         const days = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
         return days >= 0 && days <= 7;
@@ -99,32 +223,53 @@ function updateDiscountStats() {
 // Render discounts table
 function renderDiscounts() {
     const tbody       = document.querySelector('#discountsTable tbody');
-    const search      = document.getElementById('discountSearch').value.toLowerCase();
-    const statusFilter = document.getElementById('discountStatusFilter').value;
+    if (!tbody) return;
+
+    const searchInput = document.getElementById('discountSearch');
+    const statusInput = document.getElementById('discountStatusFilter');
+    const search      = String(searchInput?.value || '').toLowerCase();
+    const statusFilter = String(statusInput?.value || '');
 
     const filtered = mockData.discounts.filter(d => {
-        const matchSearch = d.code.toLowerCase().includes(search) ||
-                            d.description.toLowerCase().includes(search);
+        const code = String(d.code || d.id || '').toLowerCase();
+        const description = String(d.description || '').toLowerCase();
+        const matchSearch = code.includes(search) || description.includes(search);
         const status = getDiscountStatus(d).label;
         const matchStatus = !statusFilter || status === statusFilter;
         return matchSearch && matchStatus;
     });
 
-    const totalPages  = Math.ceil(filtered.length / itemsPerPage);
+    const totalPages  = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+    if (currentDiscountsPage > totalPages) currentDiscountsPage = totalPages;
+    if (currentDiscountsPage < 1) currentDiscountsPage = 1;
     const start       = (currentDiscountsPage - 1) * itemsPerPage;
     const paginated   = filtered.slice(start, start + itemsPerPage);
 
+    if (paginated.length === 0) {
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="8" style="text-align:center;padding:24px;color:var(--text-muted);">
+                No discounts found for the current filters.
+            </td>
+        </tr>`;
+        renderPagination('discountsPagination', currentDiscountsPage, totalPages, 'discounts');
+        updateDiscountStats();
+        return;
+    }
+
     tbody.innerHTML = paginated.map(d => {
+        
         const status    = getDiscountStatus(d);
-        const typeLabel = d.type === 'percentage' ? `${d.value}%` : `₱${d.value}`;
-        const typeText  = d.type === 'percentage' ? 'Percentage' : 'Fixed';
+        const typeValue = String(d.type || d.carts || '').toLowerCase();
+        const typeLabel = typeValue === 'percentage' ? `${d.value}%` : `₱${d.value}`;
+        const typeText  = typeValue === 'percentage' ? 'Percentage' : 'Fixed';
         return `
         <tr data-discount-code="${d.code}">
             <td><span class="discount-code">${d.code}</span></td>
             <td>${d.description || '—'}</td>
             <td>${typeText}</td>
             <td><strong>${typeLabel}</strong></td>
-            <td>${d.usageCount} / ${d.usageLimit}</td>
+            <td>${d.perUserLimit ?? d.UsagePerUser ?? '—'} / ${d.usageLimit ?? d.totalUsageLimit ?? '—'}</td>
             <td>${formatDate(d.endDate)}</td>
             <td><span class="badge ${status.cls}">${status.label}</span></td>
             <td>
@@ -151,6 +296,7 @@ function renderDiscounts() {
 
 // Add discount
 function addDiscount() {
+    console.log('Attempting to add discount...');
     const code         = document.getElementById('discountCode').value.trim().toUpperCase();
     const description  = document.getElementById('discountDescription').value.trim();
     const type         = document.getElementById('discountType').value;
@@ -176,27 +322,52 @@ function addDiscount() {
         return;
     }
 
-    const newId = 'd' + Date.now();
-    mockData.discounts.push({
-        id: newId, code, description, type, value, minPurchase, maxAmount,
-        startDate, endDate, usageLimit, usageCount: 0, perUserLimit, applicableTo, active: true
+    const formData = new FormData();
+    formData.append('discountCode',        code);
+    formData.append('discountDescription', description);
+    formData.append('discountType',        type);
+    formData.append('discountValue',       value);
+    formData.append('discountMinPurchase', minPurchase);
+    formData.append('discountMaxAmount',   maxAmount ?? '');   // send empty string when null
+    formData.append('discountStartDate',   startDate);
+    formData.append('discountEndDate',     endDate);
+    formData.append('discountUsageLimit',  usageLimit);
+    formData.append('discountPerUserLimit',perUserLimit);
+    formData.append('discountApplicableTo',applicableTo);
+
+    fetch('../adminBack_end/add_discount.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        console.log('ADD DISCOUNT RESPONSE:', data);
+
+        if (data.trim().toLowerCase() === 'success') {
+            pendingDiscountHighlightCode = code;
+            closeModal('addDiscountModal');
+
+            ['discountCode','discountDescription','discountValue','discountMinPurchase',
+             'discountMaxAmount','discountStartDate','discountEndDate','discountUsageLimit',
+             'discountPerUserLimit'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            loadDiscounts();
+            alert('Discount created successfully!');
+        } else {
+            alert('Failed to create discount: ' + data);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Request failed.');
     });
 
-    closeModal('addDiscountModal');
-    document.getElementById('addDiscountModal').querySelector('form') &&
-        document.getElementById('addDiscountModal').querySelector('form').reset();
-    // manually clear fields
-    ['discountCode','discountDescription','discountValue','discountMinPurchase',
-     'discountMaxAmount','discountStartDate','discountEndDate','discountUsageLimit',
-     'discountPerUserLimit'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-
-    renderDiscounts();
-    alert('Discount created successfully!');
+    // ✅ FIX 2 (cont.): nothing here anymore — removed the premature
+    //    closeModal / field clear / renderDiscounts / alert that used to live here
 }
-
 // Open edit discount modal
 function openEditDiscountModal(discountId) {
     const d = mockData.discounts.find(x => x.id === discountId);
@@ -209,8 +380,8 @@ function openEditDiscountModal(discountId) {
     document.getElementById('editDiscountValue').value        = d.value;
     document.getElementById('editDiscountMinPurchase').value  = d.minPurchase || 0;
     document.getElementById('editDiscountMaxAmount').value    = d.maxAmount || '';
-    document.getElementById('editDiscountStartDate').value    = d.startDate;
-    document.getElementById('editDiscountEndDate').value      = d.endDate;
+    document.getElementById('editDiscountStartDate').value    = formatDateForInput(d.startDate);
+    document.getElementById('editDiscountEndDate').value      = formatDateForInput(d.endDate);
     document.getElementById('editDiscountUsageLimit').value   = d.usageLimit;
     document.getElementById('editDiscountPerUserLimit').value = d.perUserLimit || 1;
     document.getElementById('editDiscountApplicableTo').value = d.applicableTo || 'all';
@@ -251,22 +422,39 @@ function saveDiscount() {
         return;
     }
 
-    d.code         = code;
-    d.description  = document.getElementById('editDiscountDescription').value.trim();
-    d.type         = document.getElementById('editDiscountType').value;
-    d.value        = parseFloat(document.getElementById('editDiscountValue').value);
-    d.minPurchase  = parseFloat(document.getElementById('editDiscountMinPurchase').value) || 0;
-    d.maxAmount    = parseFloat(document.getElementById('editDiscountMaxAmount').value) || null;
-    d.startDate    = startDate;
-    d.endDate      = endDate;
-    d.usageLimit   = parseInt(document.getElementById('editDiscountUsageLimit').value);
-    d.perUserLimit = parseInt(document.getElementById('editDiscountPerUserLimit').value) || 1;
-    d.applicableTo = document.getElementById('editDiscountApplicableTo').value;
-    d.active       = document.getElementById('editDiscountActive').checked;
+    const formData = new FormData();
+    formData.append('discountId', id);
+    formData.append('discountCode', code);
+    formData.append('discountDescription', document.getElementById('editDiscountDescription').value.trim());
+    formData.append('discountType', document.getElementById('editDiscountType').value);
+    formData.append('discountValue', document.getElementById('editDiscountValue').value);
+    formData.append('discountMinPurchase', document.getElementById('editDiscountMinPurchase').value || 0);
+    formData.append('discountMaxAmount', document.getElementById('editDiscountMaxAmount').value || '');
+    formData.append('discountStartDate', startDate);
+    formData.append('discountEndDate', endDate);
+    formData.append('discountUsageLimit', document.getElementById('editDiscountUsageLimit').value);
+    formData.append('discountPerUserLimit', document.getElementById('editDiscountPerUserLimit').value || 1);
+    formData.append('discountApplicableTo', document.getElementById('editDiscountApplicableTo').value);
+    formData.append('discountActive', document.getElementById('editDiscountActive').checked ? '1' : '0');
 
-    closeModal('editDiscountModal');
-    renderDiscounts();
-    alert('Discount updated successfully!');
+    fetch('../adminBack_end/edit_discount.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        if (data.trim().toLowerCase() === 'success') {
+            closeModal('editDiscountModal');
+            loadDiscounts();
+            alert('Discount updated successfully!');
+        } else {
+            alert('Update failed: ' + data);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Request failed.');
+    });
 }
 
 // Delete discount
@@ -277,11 +465,75 @@ function openDeleteDiscountModal(discountId) {
 
 function confirmDeleteDiscount() {
     if (!deleteDiscountId) return;
-    mockData.discounts = mockData.discounts.filter(d => d.id !== deleteDiscountId);
-    deleteDiscountId = null;
-    closeModal('deleteDiscountModal');
-    renderDiscounts();
-    alert('Discount deleted successfully!');
+    const formData = new FormData();
+    formData.append('discountId', deleteDiscountId);
+
+    fetch('../adminBack_end/delete_discount.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.text())
+    .then(data => {
+        if (data.trim().toLowerCase() === 'success') {
+            deleteDiscountId = null;
+            closeModal('deleteDiscountModal');
+            loadDiscounts();
+            alert('Discount deleted successfully!');
+        } else {
+            alert('Delete failed: ' + data);
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Request failed.');
+    });
+}
+
+function formatDateForInput(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function normalizeDiscountRecord(item) {
+    const cartsValue = String(item.carts || item.type || '').toLowerCase();
+    return {
+        id: item.discountCode || item.id || '',
+        code: item.discountCode || item.code || '',
+        type: cartsValue === 'fixed amount' ? 'fixed' : 'percentage',
+        description: item.description || '',
+        value: parseFloat(item.discountValue ?? item.value ?? 0),
+        minPurchase: parseFloat(item.minPurchase ?? 0),
+        maxAmount: item.maxDiscount === null || item.maxDiscount === undefined || item.maxDiscount === '' ? null : parseFloat(item.maxDiscount),
+        applicableTo: item.discountCategory || item.applicableTo || 'Unisex',
+        startDate: formatDateForInput(item.startDate),
+        endDate: formatDateForInput(item.endDate),
+        usageLimit: parseInt(item.totalUsageLimit ?? item.usageLimit ?? 0),
+        perUserLimit: parseInt(item.UsagePerUser ?? item.perUserLimit ?? 1),
+        usageCount: parseInt(item.usageCount ?? 0),
+        active: item.active !== undefined ? Boolean(item.active) : true
+    };
+}
+
+function loadDiscounts() {
+    fetch(`../adminBack_end/get_discounts.php?_=${Date.now()}`, { cache: 'no-store' })
+        .then(res => res.text())
+        .then(data => {
+            try {
+                const json = JSON.parse(data);
+                mockData.discounts = Array.isArray(json) ? json.map(normalizeDiscountRecord) : [];
+                renderDiscounts();
+                updateDiscountStats();
+            } catch (error) {
+                console.error('JSON ERROR:', error);
+                alert('Invalid JSON from discount server');
+            }
+        })
+        .catch(err => console.error('FETCH ERROR:', err));
 }
 
 // Image upload handlers
@@ -340,17 +592,21 @@ function addProduct() {
     }
 
     // ✅ FORMAT + VALIDATE
+    const categoryInput = document.getElementById('addCategory').value;
+    const category = normalizeCategoryValue(categoryInput);
     const rawId = document.getElementById('addProductId').value.trim();
-    const id = formatProductId(rawId);
+    const id = formatProductId(rawId, category);
 
     const name = document.getElementById('addProductName').value.trim();
     const description = document.getElementById('addDescription').value.trim();
-    const category = document.getElementById('addCategory').value;
     const stock = parseInt(document.getElementById('addStock').value) || 0;
     const price = parseFloat(document.getElementById('addPrice').value) || 0;
     const frameWidth = parseFloat(document.getElementById('addFrameWidth').value) || 0;
+    const frameHeight = parseFloat(document.getElementById('addFrameHeight').value) || 0;
+    const lensWidth = parseFloat(document.getElementById('addLensWidth').value) || 0;
     const templeLength = parseFloat(document.getElementById('addTempleLength').value) || 0;
     const material = document.getElementById('addMaterial').value.trim();
+    const color = document.getElementById('addColor').value.trim();
 
     if (!id || !name || !category || price <= 0) {
         alert('Please fill in all required fields correctly.');
@@ -358,11 +614,21 @@ function addProduct() {
     }
 
     if (!PRODUCT_ID_PATTERN.test(id)) {
-        alert('Product ID must use the LGF-001 format.');
+        alert('Product ID must use the LGF-M-001-26, LGF-W-001-26, or LGF-U-001-26 format.');
         return;
     }
 
-    const duplicateProductId = mockData.products.some(p => formatProductId(p.id) === id);
+    if (frameWidth <= 0 || frameHeight <= 0 || lensWidth <= 0) {
+        alert('Frame Width, Frame Height, and Lens Width must be greater than 0.');
+        return;
+    }
+
+    if (!color) {
+        alert('Color is required.');
+        return;
+    }
+
+    const duplicateProductId = mockData.products.some(p => formatProductId(p.id, p.category) === id);
     if (duplicateProductId) {
         alert(`Product ID "${id}" already exists.`);
         return;
@@ -379,8 +645,11 @@ function addProduct() {
 
     // ✅ EXTRA FIELDS (NEW)
     formData.append('addProductFrame', frameWidth);
+    formData.append('addProductFrameHeight', frameHeight);
+    formData.append('addProductLensWidth', lensWidth);
     formData.append('addProductTemple', templeLength);
     formData.append('addProductMaterial', material);
+    formData.append('addProductColor', color);
 
     // ✅ HANDLE IMAGES
     const images = [];
@@ -412,6 +681,7 @@ function addProduct() {
             // ✅ ALSO UPDATE LOCAL STATE (instant UI)
             mockData.products.push({
                 id,
+                dbId: id,
                 name,
                 description,
                 category,
@@ -419,19 +689,17 @@ function addProduct() {
                 price,
                 images,
                 frameWidth,
+                frameHeight,
+                lensWidth,
                 templeLength,
                 material,
-                onSale: false,
-                salePrice: null,
-                saleStartDate: null,
-                saleEndDate: null,
-                saleLabel: null
+                color
             });
 
             // ✅ CLEAR FORM
             [
                 'addProductId','addProductName','addDescription','addStock',
-                'addPrice','addFrameWidth','addTempleLength','addMaterial'
+                'addPrice','addFrameWidth','addFrameHeight','addLensWidth','addTempleLength','addMaterial','addColor'
             ].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
@@ -459,13 +727,12 @@ function addProduct() {
 
             // ✅ UPDATE UI
             updateStats();
+            updateInvStats();
             renderProducts();
+            renderInventory();
 
             alert('Product added successfully!');
             closeModal('addProductModal');
-
-            // OPTIONAL: sync with DB again
-            loadProducts();
 
         } else {
             alert('Add failed: ' + data);
@@ -476,19 +743,59 @@ function addProduct() {
         alert('Request failed.');
     });
 }
+
+function autoFillAddProductId() {
+    const idInput = document.getElementById('addProductId');
+    const categorySelect = document.getElementById('addCategory');
+    if (!idInput || !categorySelect) return;
+
+    const category = normalizeCategoryValue(categorySelect.value);
+    if (!category) {
+        idInput.value = '';
+        idInput.placeholder = 'e.g., LGF-M-001-26';
+        return;
+    }
+
+    const generated = generateProductId(category);
+    if (generated) {
+        idInput.value = generated;
+        idInput.placeholder = generated;
+    }
+}
 function updateProduct() {
     const id = document.getElementById('editProductId').value;
+    const category = normalizeCategoryValue(document.getElementById('editCategory').value);
+    const product = findProductByAnyId(id);
+    const dbId = product ? (product.dbId || product.id) : id;
 
     const formData = new FormData();
-    formData.append('id', id);
+    formData.append('id', dbId);
     formData.append('name', document.getElementById('editProductName').value.trim());
     formData.append('description', document.getElementById('editDescription').value.trim());
-    formData.append('category', document.getElementById('editCategory').value);
+    formData.append('category', category);
     formData.append('price', document.getElementById('editPrice').value);
     formData.append('stock', document.getElementById('editStock').value);
     formData.append('frameWidth', document.getElementById('editFrameWidth').value);
+    formData.append('frameHeight', document.getElementById('editFrameHeight').value);
+    formData.append('lensWidth', document.getElementById('editLensWidth').value);
     formData.append('templeLength', document.getElementById('editTempleLength').value);
     formData.append('material', document.getElementById('editMaterial').value);
+    formData.append('color', document.getElementById('editColor').value);
+
+    const editFrameWidth = parseFloat(document.getElementById('editFrameWidth').value) || 0;
+    const editFrameHeight = parseFloat(document.getElementById('editFrameHeight').value) || 0;
+    const editLensWidth = parseFloat(document.getElementById('editLensWidth').value) || 0;
+    const editColor = document.getElementById('editColor').value.trim();
+
+    if (editFrameWidth <= 0 || editFrameHeight <= 0 || editLensWidth <= 0) {
+        alert('Frame Width, Frame Height, and Lens Width must be greater than 0.');
+        return;
+    }
+
+    if (!editColor) {
+        alert('Color is required.');
+        return;
+    }
 
     // ✅ HANDLE MULTIPLE IMAGES (1–4)
     for (let i = 1; i <= 4; i++) {
@@ -520,14 +827,21 @@ function updateProduct() {
     });
 }
 function loadProducts() {
-    fetch('../adminBack_end/get_products.php')
+    fetch(`../adminBack_end/get_products.php?_=${Date.now()}`, { cache: 'no-store' })
         .then(res => res.text()) // 👈 CHANGE THIS
         .then(data => {
             console.log("RAW RESPONSE:", data); // 👈 DEBUG
 
             try {
                 const json = JSON.parse(data);
-                mockData.products = json;
+                mockData.products = json.map((p) => ({
+                    ...p,
+                    category: normalizeCategoryValue(p.category),
+                    dbId: String(p.id || ''),
+                    id: formatProductId(p.id, p.category)
+                }));
+
+                clearProductSearchIfAutofilledEmail();
 
                 renderProducts();
                 renderInventory();
@@ -542,8 +856,20 @@ function loadProducts() {
         .catch(err => console.error("FETCH ERROR:", err));
 }
 function openViewModal(productId) {
-    const product = mockData.products.find(p => p.id === productId);
+    const product = findProductByAnyId(productId);
     if (!product) return;
+
+    const asDisplay = (value, fallback = 'N/A') => {
+        if (value === null || value === undefined || value === '') return fallback;
+        return String(value);
+    };
+
+    const frameWidthValue = asDisplay(product.frameWidth);
+    const frameHeightValue = asDisplay(product.frameHeight, frameWidthValue);
+    const lensWidthValue = asDisplay(product.lensWidth, frameWidthValue);
+    const templeLengthValue = asDisplay(product.templeLength);
+    const materialValue = asDisplay(product.material);
+    const colorValue = asDisplay(product.color, 'Matte Black');
 
     // Populate view modal with product details
     document.getElementById('viewProductId').value = product.id;
@@ -552,9 +878,12 @@ function openViewModal(productId) {
     document.getElementById('viewProductPrice').value = product.price.toLocaleString();
     document.getElementById('viewProductStock').value = product.stock;
     document.getElementById('viewProductDescription').value = product.description || 'No description available';
-    document.getElementById('viewFrameWidth').value = product.frameWidth || 'N/A';
-    document.getElementById('viewTempleLength').value = product.templeLength || 'N/A';
-    document.getElementById('viewMaterial').value = product.material || 'N/A';
+    document.getElementById('viewFrameWidth').value = frameWidthValue;
+    document.getElementById('viewFrameHeight').value = frameHeightValue;
+    document.getElementById('viewLensWidth').value = lensWidthValue;
+    document.getElementById('viewTempleLength').value = templeLengthValue;
+    document.getElementById('viewMaterial').value = materialValue;
+    document.getElementById('viewColor').value = colorValue;
 
     // Show sale info if on sale
     const saleInfoGroup = document.getElementById('saleInfoGroup');
@@ -608,18 +937,21 @@ function setViewMainImage(index) {
 }
 
 function openEditModal(productId) {
-    const product = mockData.products.find(p => p.id === productId);
+    const product = findProductByAnyId(productId);
     if (!product) return;
 
     document.getElementById('editProductId').value    = product.id;
     document.getElementById('editProductName').value  = product.name;
     document.getElementById('editDescription').value  = product.description || '';
-    document.getElementById('editCategory').value     = product.category;
+    document.getElementById('editCategory').value     = toCategoryLabel(product.category);
     document.getElementById('editStock').value        = product.stock;
     document.getElementById('editPrice').value        = product.price;
     document.getElementById('editFrameWidth').value   = product.frameWidth || '';
+    document.getElementById('editFrameHeight').value  = product.frameHeight || '';
+    document.getElementById('editLensWidth').value    = product.lensWidth || '';
     document.getElementById('editTempleLength').value = product.templeLength || '';
     document.getElementById('editMaterial').value     = product.material || '';
+    document.getElementById('editColor').value        = product.color || '';
 
     const images = product.images || ['/global/jin.jpg'];
 
@@ -637,7 +969,7 @@ function openEditModal(productId) {
 }
 
 function openSaleModal(productId) {
-    const product = mockData.products.find(p => p.id === productId);
+    const product = findProductByAnyId(productId);
     if (!product) return;
 
     document.getElementById('saleProductName').value = product.name;
@@ -659,7 +991,7 @@ function openSaleModal(productId) {
 }
 
 function applySale() {
-    const product = mockData.products.find(p => p.id === selectedProductId);
+    const product = findProductByAnyId(selectedProductId);
     if (!product) return;
 
     const salePrice = parseFloat(document.getElementById('salePrice').value);
@@ -695,7 +1027,7 @@ function applySale() {
 }
 
 function removeSale() {
-    const product = mockData.products.find(p => p.id === selectedProductId);
+    const product = findProductByAnyId(selectedProductId);
     if (!product) return;
 
     product.onSale = false;
@@ -711,7 +1043,8 @@ function removeSale() {
 }
 
 function openDeleteModal(productId) {
-    deleteTargetId = productId;
+    const product = findProductByAnyId(productId);
+    deleteTargetId = product ? (product.dbId || product.id) : productId;
     openModal('deleteProductModal');
 }
 
@@ -722,7 +1055,7 @@ function confirmDelete() {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                mockData.products = mockData.products.filter(p => p.id !== deleteTargetId);
+            mockData.products = mockData.products.filter(p => (p.dbId || p.id) !== deleteTargetId);
                 deleteTargetId = null;
                 closeModal('deleteProductModal');
                 renderProducts();
@@ -742,13 +1075,13 @@ function confirmDelete() {
 
 // Inventory
 function openInventoryModal(productId) {
-    const product = mockData.products.find(p => p.id === productId);
+    const product = findProductByAnyId(productId);
     if (!product) {
         console.error('Product not found:', productId);
         alert('Product not found!');
         return;
     }
-    currentInventoryId = productId;
+    currentInventoryId = product.dbId || product.id;
 
     // Check if modal elements exist
     const productNameEl = document.getElementById('inventoryProductName');
@@ -782,6 +1115,57 @@ function openInventoryModal(productId) {
     openModal('updateInventoryModal');
 }
 
+function updateInventory() {
+    const stock = parseInt(document.getElementById('inventoryStock').value);
+    const price = parseFloat(document.getElementById('inventoryPrice').value);
+
+    if (isNaN(stock) || stock < 0) {
+        alert('Please enter a valid stock quantity.');
+        return;
+    }
+    if (isNaN(price) || price <= 0) {
+        alert('Please enter a valid price.');
+        return;
+    }
+    if (!currentInventoryId) {
+        alert('No product selected.');
+        return;
+    }
+
+    fetch('../adminBack_end/productsAPI.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: currentInventoryId, stock, price })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            // Update local state
+            const product = findProductByAnyId(currentInventoryId);
+            if (product) {
+                product.price = price;
+            }
+
+            if (typeof window.loadNotifications === 'function') {
+                window.loadNotifications();
+            }
+
+            closeModal('updateInventoryModal');
+            renderProducts();
+            renderInventory();
+            updateStats();
+            updateInvStats();
+            alert('Inventory updated successfully!');
+        } else {
+            alert('Update failed: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(err => {
+        console.error('Inventory update error:', err);
+        alert('Request failed.');
+    });
+}
+
 function getStockStatus(stock) {
     if (stock === 0)   return { label: 'Out of Stock', class: 'badge-danger'  };
     if (stock < 15)    return { label: 'Low Stock',    class: 'badge-warning' };
@@ -808,25 +1192,44 @@ function updateInvStats() {
 // Render products
 function renderProducts() {
     const tableBody = document.querySelector('#productsTable tbody');
-    const search    = document.getElementById('searchInput').value.toLowerCase();
-    const category  = document.getElementById('categoryFilter').value;
+    if (!tableBody) return;
+
+    const categoryFilter = document.getElementById('categoryFilter');
+    const search = getProductSearchTerm();
+    const category = normalizeCategoryValue(categoryFilter?.value || '');
 
     const filtered = mockData.products.filter(p => {
-        const matchesSearch   = p.name.toLowerCase().includes(search) || p.id.toLowerCase().includes(search);
-        const matchesCategory = !category || p.category === category;
+        const productName = String(p.name || '').toLowerCase();
+        const productId = String(p.id || '').toLowerCase();
+        const matchesSearch = productName.includes(search) || productId.includes(search);
+        const matchesCategory = !category || normalizeCategoryValue(p.category) === category;
         return matchesSearch && matchesCategory;
     });
 
-    const totalPages  = Math.ceil(filtered.length / itemsPerPage);
+    const totalPages  = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+    if (currentProductsPage > totalPages) currentProductsPage = totalPages;
+    if (currentProductsPage < 1) currentProductsPage = 1;
     const start       = (currentProductsPage - 1) * itemsPerPage;
     const paginated   = filtered.slice(start, start + itemsPerPage);
+
+    if (paginated.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align:center;padding:24px;color:var(--text-muted);">
+                    No products found for the current filters.
+                </td>
+            </tr>
+        `;
+        renderPagination('productsPagination', currentProductsPage, totalPages, 'products');
+        return;
+    }
 
     tableBody.innerHTML = paginated.map(p => `
         <tr>
             <td><img src="${p.images && p.images[0] ? p.images[0] : '/global/jin.jpg'}" alt="${p.name}" class="avatar" style="width:80px;height:80px;border-radius:8px;object-fit:cover;"></td>
             <td><strong>${p.id}</strong></td>
             <td><strong>${p.name}</strong></td>
-            <td>${p.category}</td>
+            <td>${toCategoryLabel(p.category)}</td>
             <td><span class="badge ${p.onSale ? 'badge-purple' : 'badge-success'}">${p.onSale ? 'On Sale' : 'Regular'}</span></td>
             <td><strong>${p.onSale ? `<span style="text-decoration:line-through;color:#888;">₱${p.price}</span> <span style="color:#e74c3c;">₱${p.salePrice}</span>` : `₱${p.price}`}</strong></td>
             <td>
@@ -873,14 +1276,14 @@ function renderInventory() {
         return `
         <tr data-product-id="${p.id}">
             <td><img src="${p.images && p.images[0] ? p.images[0] : '/global/jin.jpg'}" alt="${p.name}" class="avatar" style="width:80px;height:80px;border-radius:8px;object-fit:cover;"></td>
-            <td><strong>${p.product_id}</strong></td>
+            <td><strong>${p.id}</strong></td>
             <td><strong>${p.name}</strong></td>
-            <td>${p.category}</td>
+            <td>${toCategoryLabel(p.category)}</td>
             <td><strong>${p.stock}</strong></td>
             <td><span class="badge ${statusInfo.class}">${statusInfo.label}</span></td>
             <td>
                 <div class="actions-cell">
-                    <button class="btn btn-secondary btn-sm" onclick="openInventoryModal('${p.product_id}')">
+                    <button class="btn btn-secondary btn-sm" onclick="openInventoryModal('${p.id}')">
                         <i class="fas fa-edit"></i>
                     </button>
                 </div>
@@ -938,9 +1341,25 @@ function activateProductTab(tabId) {
 
     const tabBtn = document.querySelector(`.tab-link[data-tab="${tabId}"]`);
     const tabContent = document.getElementById(tabId);
-    if (tabBtn) tabBtn.classList.add('active');
-    if (tabContent) tabContent.classList.add('active');
-    updateProductSectionHeading(tabId);
+    if (tabBtn && tabContent) {
+        tabBtn.classList.add('active');
+        tabContent.classList.add('active');
+        activeProductTab = tabId;
+        updateProductSectionHeading(tabId);
+    }
+}
+
+function ensureActiveProductTabVisible() {
+    const activeContent = document.querySelector('.tab-content.active');
+    const activeButton = document.querySelector('.tab-link.active');
+    if (activeContent && activeButton) {
+        renderActiveProductTab();
+        return;
+    }
+
+    const fallbackTab = document.getElementById(activeProductTab) ? activeProductTab : 'productsTab';
+    activateProductTab(fallbackTab);
+    renderActiveProductTab();
 }
 
 function handleNotificationDeepLink() {
@@ -958,7 +1377,7 @@ function handleNotificationDeepLink() {
         document.getElementById('stockFilter').value = '';
 
         if (productId) {
-            const index = mockData.products.findIndex((p) => String(p.id) === String(productId));
+            const index = mockData.products.findIndex((p) => String(p.id) === String(productId) || String(p.dbId || '') === String(productId));
             if (index >= 0) {
                 currentInventoryPage = Math.floor(index / itemsPerPage) + 1;
                 pendingInventoryHighlightId = String(productId);
@@ -998,6 +1417,8 @@ function renderPagination(containerId, currentPage, totalPages, type) {
     const container = document.getElementById(containerId);
     if (!container) return;
     container.innerHTML = '';
+
+    if (totalPages <= 1) return;
 
     const createBtn = (text, page, disabled = false) => {
         const btn = document.createElement('button');
@@ -1043,9 +1464,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const productsTab = document.querySelector('[data-tab="productsTab"]');
     const productsContent = document.getElementById('productsTab');
     if (productsTab && productsContent) {
-        productsTab.classList.add('active');
-        productsContent.classList.add('active');
-        updateProductSectionHeading('productsTab');
+        activateProductTab('productsTab');
         // Render products after a short delay to ensure CSS is loaded
         setTimeout(() => renderProducts(), 10);
     }
@@ -1053,48 +1472,80 @@ document.addEventListener('DOMContentLoaded', () => {
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
             activateProductTab(tab.dataset.tab);
-
-            if (tab.dataset.tab === 'productsTab')  renderProducts();
-            if (tab.dataset.tab === 'inventoryTab') renderInventory();
-            if (tab.dataset.tab === 'discountsTab') renderDiscounts();
+            renderActiveProductTab();
         });
     });
 
+    // Keep the currently selected product tab visible even if other handlers alter classes.
+    document.addEventListener('click', () => {
+        ensureActiveProductTabVisible();
+    });
+
     // Discount search + filter live update
-    document.getElementById('discountSearch').addEventListener('input', () => {
-        currentDiscountsPage = 1;
-        renderDiscounts();
-    });
-    document.getElementById('discountStatusFilter').addEventListener('change', () => {
-        currentDiscountsPage = 1;
-        renderDiscounts();
-    });
+    const discountSearchInput = document.getElementById('discountSearch');
+    const discountStatusSelect = document.getElementById('discountStatusFilter');
+    if (discountSearchInput) {
+        discountSearchInput.addEventListener('input', () => {
+            currentDiscountsPage = 1;
+            renderDiscounts();
+        });
+    }
+    if (discountStatusSelect) {
+        discountStatusSelect.addEventListener('change', () => {
+            currentDiscountsPage = 1;
+            renderDiscounts();
+        });
+    }
 
     // Product search + filter live update
-    document.getElementById('searchInput').addEventListener('input', () => {
-        currentProductsPage = 1;
-        renderProducts();
-    });
-    document.getElementById('categoryFilter').addEventListener('change', () => {
-        currentProductsPage = 1;
-        renderProducts();
-    });
+    const productSearchInput = document.getElementById('searchInput');
+    const categoryFilterSelect = document.getElementById('categoryFilter');
+    if (productSearchInput) {
+        clearProductSearchIfAutofilledEmail();
+        productSearchInput.addEventListener('input', () => {
+            currentProductsPage = 1;
+            renderProducts();
+        });
+    }
+    if (categoryFilterSelect) {
+        categoryFilterSelect.addEventListener('change', () => {
+            currentProductsPage = 1;
+            renderProducts();
+        });
+    }
+
+    const addCategorySelect = document.getElementById('addCategory');
+    if (addCategorySelect) {
+        addCategorySelect.addEventListener('change', () => {
+            autoFillAddProductId();
+        });
+        autoFillAddProductId();
+    }
 
     // Inventory search + filter live update
-    document.getElementById('invSearchInput').addEventListener('input', () => {
-        currentInventoryPage = 1;
-        renderInventory();
-    });
-    document.getElementById('stockFilter').addEventListener('change', () => {
-        currentInventoryPage = 1;
-        renderInventory();
-    });
-    document.getElementById('clearInvFilters').addEventListener('click', () => {
-        document.getElementById('invSearchInput').value   = '';
-        document.getElementById('stockFilter').value      = '';
-        currentInventoryPage = 1;
-        renderInventory();
-    });
+    const inventorySearchInput = document.getElementById('invSearchInput');
+    const stockFilterSelect = document.getElementById('stockFilter');
+    const clearInventoryFiltersBtn = document.getElementById('clearInvFilters');
+    if (inventorySearchInput) {
+        inventorySearchInput.addEventListener('input', () => {
+            currentInventoryPage = 1;
+            renderInventory();
+        });
+    }
+    if (stockFilterSelect) {
+        stockFilterSelect.addEventListener('change', () => {
+            currentInventoryPage = 1;
+            renderInventory();
+        });
+    }
+    if (clearInventoryFiltersBtn) {
+        clearInventoryFiltersBtn.addEventListener('click', () => {
+            if (inventorySearchInput) inventorySearchInput.value = '';
+            if (stockFilterSelect) stockFilterSelect.value = '';
+            currentInventoryPage = 1;
+            renderInventory();
+        });
+    }
 
     // Auto-uppercase discount code inputs
     ['discountCode', 'editDiscountCode'].forEach(id => {
@@ -1105,8 +1556,9 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStats();
     updateInvStats();
     renderInventory();
-    renderDiscounts();
+    renderProducts();
     initNotifications();
     handleNotificationDeepLink();
     loadProducts();
+    loadDiscounts();
 });

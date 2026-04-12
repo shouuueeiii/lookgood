@@ -40,7 +40,7 @@ function renderWishlist() {
       </button>
       <div class="wishlist-image-wrapper" data-id="${item.id}">
         <img class="wishlist-image" src="${item.image}" alt="${escapeHtml(item.name)}"
-             onerror="this.src='../../Resources/Images/glasses1.png'">
+             onerror="this.onerror=null;this.src='/lookgood/New%20folder/Resources/Images/glasses1.png';">
       </div>
       <div class="wishlist-info">
         <span class="wishlist-category">${escapeHtml(item.category)}</span>

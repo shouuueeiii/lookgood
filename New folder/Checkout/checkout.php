@@ -1,6 +1,7 @@
 <?php
 // checkout.php
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../../session_bootstrap.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -207,6 +208,6 @@ session_start();
     </div>
 </div>
 
-<script src="checkout.js"></script>
+<script src="checkout.js?v=20260412"></script>
 </body>
 </html>

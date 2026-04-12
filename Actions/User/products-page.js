@@ -29,7 +29,7 @@ function renderProducts(products) {
       <div class="product-card${outOfStock ? ' product-card--disabled' : ''}" tabindex="0" role="button" aria-label="View details for ${p.name}">
         <div class="product-image-wrapper">
           <img src="${p.image}" alt="${p.name} frames" class="product-image" loading="lazy"
-               onerror="this.src='../../Resources/Images/glasses1.png'">
+            onerror="this.onerror=null;this.src='/lookgood/New%20folder/Resources/Images/glasses1.png';">
           ${stockLabel}
         </div>
         <div class="product-info">
@@ -85,6 +85,13 @@ function initFilters() {
   const filterBtns = document.querySelectorAll('.filter-btn');
   const indicator  = document.querySelector('.filter-indicator');
 
+  function normalizeFilterValue(value) {
+    const v = String(value || '').toLowerCase().trim();
+    if (v === 'men') return 'male';
+    if (v === 'women') return 'female';
+    return v;
+  }
+
   function moveIndicator(btn) {
     if (!indicator) return;
     indicator.style.width     = btn.offsetWidth + 'px';
@@ -92,8 +99,10 @@ function initFilters() {
   }
 
   function filterProducts(filter) {
+    const normalizedFilter = normalizeFilterValue(filter);
     document.querySelectorAll('.product-col').forEach(col => {
-      col.classList.toggle('hidden', filter !== 'all' && col.dataset.category !== filter);
+      const normalizedCategory = normalizeFilterValue(col.dataset.category);
+      col.classList.toggle('hidden', normalizedFilter !== 'all' && normalizedCategory !== normalizedFilter);
     });
   }
 
@@ -163,8 +172,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   initFilters();
 
   if (urlFilter) {
-    const btn = document.querySelector('.filter-btn[data-filter="' + urlFilter + '"]');
-    if (btn) btn.click();
+    const normalizedUrlFilter = urlFilter.toLowerCase() === 'male' ? 'men'
+      : (urlFilter.toLowerCase() === 'female' ? 'women' : urlFilter);
+    const btn = document.querySelector('.filter-btn[data-filter="' + normalizedUrlFilter + '"]');
+    if (btn) {
+      btn.click();
+    } else {
+      filterProducts(urlFilter);
+    }
   }
 
   if (searchQ) {

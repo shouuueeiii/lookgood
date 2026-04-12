@@ -175,6 +175,8 @@ function openEditModal(row) {
 // Password form
 function initPasswordForm() {
     const form = document.getElementById('passwordForm');
+    if (!form) return;
+
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const current  = document.getElementById('currentPassword').value;
@@ -196,6 +198,34 @@ function initPasswordForm() {
         showToast('Password changed successfully!');
         form.reset();
     });
+}
+
+function bindPasswordToggle(buttonId, inputId, iconId) {
+    const button = document.getElementById(buttonId);
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (!button || !input || !icon) return;
+
+    const syncIcon = () => {
+        const isHidden = input.type === 'password';
+        icon.classList.toggle('fa-eye', !isHidden);
+        icon.classList.toggle('fa-eye-slash', isHidden);
+        button.setAttribute('aria-label', isHidden ? 'Show password' : 'Hide password');
+    };
+
+    syncIcon();
+
+    button.addEventListener('click', () => {
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        syncIcon();
+    });
+}
+
+function initPasswordVisibilityToggles() {
+    bindPasswordToggle('toggleCurrentPassword', 'currentPassword', 'toggleCurrentIcon');
+    bindPasswordToggle('toggleNewPassword', 'newPassword', 'toggleNewIcon');
+    bindPasswordToggle('toggleConfirmPassword', 'confirmPassword', 'toggleConfirmIcon');
 }
 
 // Security form
@@ -248,6 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     initGeneralForm();
     initAdminManagement();
+    initPasswordVisibilityToggles();
     initPasswordForm();
     initSecurityForm();
     initPaymentForm();

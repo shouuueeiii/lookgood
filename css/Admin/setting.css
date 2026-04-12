@@ -13,13 +13,35 @@
     --info: #2563eb;
 }
 
+html,
+body {
+    overflow-x: hidden;
+}
+
+.main {
+    width: auto;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.main.expanded {
+    width: auto;
+    max-width: 100%;
+}
+
+.content {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 /* Card styles */
 .card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
     width: 100%;
-    max-width: 1200px;
+    max-width: 1150px;
     margin: 0 auto 32px;
     display: flex;
     flex-direction: column;
@@ -38,39 +60,64 @@
     font-weight: 600;
 }
 
+@media (max-width: 768px) {
+    .card-header {
+        padding: 12px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .tab-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .tab-btn i {
+        font-size: 11px;
+    }
+}
+
 /* Tab navigation */
 .settings-tabs {
     display: flex;
+    align-items: center;
     gap: 8px;
     margin-bottom: 24px;
-    border-bottom: 2px solid var(--border-color);
     overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
 }
 
 .tab-btn {
-    padding: 12px 24px;
-    background: none;
-    border: none;
+    padding: 10px 14px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
     color: var(--text-muted);
     font-weight: 500;
-    font-size: 16px;
+    font-size: 14px;
     cursor: pointer;
     white-space: nowrap;
-    border-bottom: 3px solid transparent;
     transition: all 0.2s;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    flex: 0 0 auto;
 }
 
 .tab-btn i {
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .tab-btn.active {
-    border-bottom-color: var(--primary-color);
-    color: var(--text-color);
+    border-color: #d1d5db;
+    color: #111827;
     font-weight: 600;
+    background: #ffffff;
+    box-shadow: 0 1px 0 rgba(17, 24, 39, 0.05), 0 0 0 2px rgba(17, 24, 39, 0.05);
 }
 
 .tab-content {
@@ -94,23 +141,48 @@
     gap: 24px;
 }
 
+.settings-block {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 18px;
+    background: #fcfcfd;
+}
+
+.settings-block-header {
+    margin-bottom: 14px;
+}
+
+.settings-block-header h4 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+.settings-block-header p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
 /* Form elements */
 .form-row {
     display: flex;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-width: 0;
 }
 
 .form-group label {
     font-size: 13px;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
     color: var(--text-muted);
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .settings-section input,
@@ -132,6 +204,39 @@
 .settings-section textarea:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-wrapper input {
+    padding-right: 40px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.toggle-password:hover {
+    color: var(--text-color);
+}
+
+.toggle-password:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.35);
+    border-radius: 6px;
 }
 
 .form-actions {
@@ -483,6 +588,12 @@ tbody tr:hover { background: var(--bg-color); }
 
 /* Responsive design */
 @media (max-width: 768px) {
+    .main,
+    .main.expanded {
+        width: 100%;
+        max-width: 100%;
+    }
+
     .form-row { flex-direction: column; }
     .settings-tabs { flex-wrap: wrap; }
     .payment-details { margin-left: 0; }

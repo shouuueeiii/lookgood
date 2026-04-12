@@ -25,6 +25,26 @@ document.addEventListener('DOMContentLoaded', function () {
     // Feedback helpers
     let formFeedbackTimeout = null;
 
+    function requestJson(url, options) {
+        return fetch(new URL(url, window.location.href).href, options).then(async (response) => {
+            const rawText = await response.text();
+            let data = {};
+
+            try {
+                data = rawText ? JSON.parse(rawText) : {};
+            } catch (parseError) {
+                throw new Error(`Unexpected server response: ${rawText || 'empty response'}`);
+            }
+
+            if (!response.ok) {
+                const details = data.error || data.message || rawText || `HTTP ${response.status}`;
+                throw new Error(details);
+            }
+
+            return data;
+        });
+    }
+
     function showMsg(elementId, message, isError = true) {
         const el = document.getElementById(elementId);
         if (!el) return;
@@ -122,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = 'Sending code…';
             btn.disabled = true;
 
-            fetch('send_otp.php', {
+            requestJson('send_otp.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -136,7 +156,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     captcha: document.getElementById('captchaInput').value.trim()
                 })
             })
-            .then(r => r.json())
             .then(data => {
                 if (data.success) {
                     showOtpStep(document.getElementById('email').value.trim());
@@ -147,8 +166,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     btn.disabled = false;
                 }
             })
-            .catch(() => {
-                showMsg('formFeedback', 'Network error. Please try again.');
+            .catch((error) => {
+                showMsg('formFeedback', error.message || 'Network error. Please try again.');
                 btn.textContent = originalText;
                 btn.disabled = false;
             });
@@ -173,12 +192,11 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = 'Verifying…';
             btn.disabled = true;
 
-            fetch('create_account.php', {
+            requestJson('create_account.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ otp: otp })
             })
-            .then(r => r.json())
             .then(data => {
                 if (data.success) {
                     showMsg('otpFeedback', 'Account created! Redirecting to login…', false);
@@ -189,8 +207,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     btn.disabled = false;
                 }
             })
-            .catch(() => {
-                showMsg('otpFeedback', 'Network error. Please try again.');
+            .catch((error) => {
+                showMsg('otpFeedback', error.message || 'Network error. Please try again.');
                 btn.textContent = originalText;
                 btn.disabled = false;
             });
@@ -206,12 +224,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const originalText = this.textContent;
             this.textContent = 'Sending…';
 
-            fetch('send_otp.php', {
+            requestJson('send_otp.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({})   // empty body means resend
             })
-            .then(r => r.json())
             .then(data => {
                 if (data.success) {
                     showMsg('otpFeedback', 'A new code has been sent!', false);
@@ -222,8 +239,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.textContent = originalText;
                 this.disabled = false;
             })
-            .catch(() => {
-                showMsg('otpFeedback', 'Network error. Please try again.');
+            .catch((error) => {
+                showMsg('otpFeedback', error.message || 'Network error. Please try again.');
                 this.textContent = originalText;
                 this.disabled = false;
             });

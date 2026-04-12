@@ -1,12 +1,10 @@
 <?php
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 require_once '../config.php';
 require_once '../auth_user.php';
 requireUser();
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'user') {
-    header("Location: ../index.php");
-    exit();
-}
+$user_id = $_SESSION['user_id'];
 
 $user_id = $_SESSION['user_id'];
 
@@ -18,7 +16,7 @@ SELECT
     GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names
 FROM checkOut o
 INNER JOIN order_items oi ON oi.order_id = o.order_id
-INNER JOIN products p ON oi.product_id = p.id
+INNER JOIN products p ON oi.product_id = p.product_id
 WHERE o.user_id = ?
 GROUP BY o.order_id
 ORDER BY o.created_at DESC

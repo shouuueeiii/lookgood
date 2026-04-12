@@ -2,6 +2,7 @@
 // Fetches real orders from the DB via ordersAPI.php
 // Path: New folder/Profile/ → userBack_end/
 const ORDERS_API = '../../userBack_end/ordersAPI.php';
+const FEEDBACK_SYNC_API = '../../userBack_end/feedbackSync.php';
 
 // ── Status config — maps DB status values to display labels ──────────────────
 const STATUS_CONFIG = {
@@ -42,6 +43,45 @@ function loadRatings()                         { try { return JSON.parse(localSt
 function saveRating(productId, rating, comment){ const r = loadRatings(); r[productId] = { rating, comment, date: new Date().toISOString() }; localStorage.setItem('productRatings', JSON.stringify(r)); }
 function getRating(productId)                  { return loadRatings()[productId] || null; }
 
+async function syncRatingsToAdmin(productId = null) {
+  const ratings = loadRatings();
+  const entries = Object.entries(ratings)
+    .filter(([pid, data]) => {
+      if (productId !== null && String(pid) !== String(productId)) return false;
+      const numericRating = parseInt(data?.rating ?? 0, 10);
+      return String(pid).trim() !== '' && numericRating >= 1 && numericRating <= 5;
+    })
+    .map(([pid, data]) => ({
+      product_id: String(pid),
+      rating: parseInt(data.rating, 10),
+      comment: String(data.comment || '').trim(),
+      date: data.date || ''
+    }));
+
+  if (entries.length === 0) return { success: true, imported: 0, updated: 0, skipped: 0 };
+
+  const res = await fetch(FEEDBACK_SYNC_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entries })
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.success) {
+    throw new Error(data.error || 'Failed to sync feedback');
+  }
+
+  // For a specific submission, require at least one row inserted/updated.
+  if (productId !== null) {
+    const changed = (parseInt(data.imported || 0, 10) + parseInt(data.updated || 0, 10));
+    if (changed <= 0) {
+      throw new Error('Feedback was not saved (no rows inserted/updated).');
+    }
+  }
+
+  return data;
+}
+
 // ── Fetch orders from DB ──────────────────────────────────────────────────────
 async function loadOrders() {
   // Show loading skeletons in all tab lists
@@ -61,10 +101,24 @@ async function loadOrders() {
       const listEl = document.getElementById('list-' + tabKey);
       if (listEl) listEl.innerHTML = '<p style="padding:1rem;color:#c00;"><i class="fas fa-exclamation-triangle"></i> Could not load orders.</p>';
     });
+
+    try {
+      await syncRatingsToAdmin();
+    } catch (syncErr) {
+      console.warn('Feedback sync skipped:', syncErr);
+    }
+
     return;
   }
 
   distributeOrders();
+
+  // Import any existing local ratings so admin feedback stays in sync.
+  try {
+    await syncRatingsToAdmin();
+  } catch (err) {
+    console.warn('Feedback sync skipped:', err);
+  }
 }
 
 // ── Distribute orders to their tabs ──────────────────────────────────────────
@@ -104,7 +158,7 @@ function renderOrderCard(order, config, tabKey) {
     return `
       <div class="order-item" data-product-id="${item.id}">
         <img class="order-item-image" src="${item.image}" alt="${escapeHtml(item.name)}"
-             onerror="this.src='../../Resources/Images/glasses1.png'">
+             onerror="this.onerror=null;this.src='/lookgood/New%20folder/Resources/Images/glasses1.png';">
         <div class="order-item-info">
           <p class="order-item-name">${escapeHtml(item.name)}</p>
           <span class="order-item-meta">Qty: ${item.qty}</span>
@@ -174,15 +228,22 @@ function initRatingModal() {
     });
   }
 
-  document.getElementById('submitRatingBtn')?.addEventListener('click', () => {
+  document.getElementById('submitRatingBtn')?.addEventListener('click', async () => {
     const rating = parseInt(document.getElementById('ratingValue')?.value || '0');
     if (!rating) { showToast('Please select a star rating (1–5).', 'error'); return; }
     const comment = document.getElementById('ratingComment')?.value.trim() || '';
     if (comment.length > 600) { showToast('Comment exceeds 600 characters.', 'error'); return; }
     saveRating(currentProductForRating, rating, comment);
-    closeRatingModal();
-    showToast('Thank you for rating our product!', 'success');
-    distributeOrders();
+
+    try {
+      await syncRatingsToAdmin(currentProductForRating);
+      closeRatingModal();
+      showToast('Thank you for rating our product!', 'success');
+      distributeOrders();
+    } catch (err) {
+      console.error('Feedback sync failed:', err);
+      showToast('Could not save your rating to the database. Please retry.', 'error');
+    }
   });
 
   document.querySelector('.rating-modal-close')?.addEventListener('click', closeRatingModal);

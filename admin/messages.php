@@ -1,11 +1,7 @@
 <?php
-session_start();
 require_once '../config.php';
 require_once '../auth_admin.php';
-if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !== 'admin') {
-    header("Location: ../index.php");
-    exit();
-}
+requireAdmin('../index.php');
 ?>
 
 <!DOCTYPE html>
@@ -14,9 +10,9 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messages | Look Good Frames Admin</title>
-    <link rel="stylesheet" href="../css/Admin/global.css">
-    <link rel="stylesheet" href="../css/Admin/notifications.css">
-    <link rel="stylesheet" href="../css/Admin/messages.css">
+    <link rel="stylesheet" href="../css/Admin/global.css?v=20260411m">
+    <link rel="stylesheet" href="../css/Admin/notifications.css?v=20260411m">
+    <link rel="stylesheet" href="../css/Admin/messages.css?v=20260411m">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
@@ -73,7 +69,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                 </a>
             </li>
             <li class="nav-item">
-                <a href="setting.php" class="nav-link">
+                <a href="settings.php" class="nav-link">
                     <i class="fas fa-cog"></i>
                     <span>Setting</span>
                 </a>
@@ -170,28 +166,28 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                                 <i class="fas fa-inbox"></i>
                                 <span class="text">Inbox</span>
                             </div>
-                            <span class="count">3</span>
+                            <span class="count">0</span>
                         </div>
                         <div class="menu-item" data-category="unread">
                             <div class="menu-icon-text">
                                 <i class="fas fa-envelope"></i>
                                 <span class="text">Unread</span>
                             </div>
-                            <span class="count">3</span>
+                            <span class="count">0</span>
                         </div>
                         <div class="menu-item" data-category="starred">
                             <div class="menu-icon-text">
                                 <i class="fas fa-star"></i>
                                 <span class="text">Starred</span>
                             </div>
-                            <span class="count">3</span>
+                            <span class="count">0</span>
                         </div>
                         <div class="menu-item" data-category="archive">
                             <div class="menu-icon-text">
                                 <i class="fas fa-box-archive"></i>
                                 <span class="text">Archive</span>
                             </div>
-                            <span class="count">3</span>
+                            <span class="count">0</span>
                         </div>
                     </div>
 
@@ -201,7 +197,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
                             <h3 id="list-title">Inbox</h3>
                             <div class="search-container">
                                 <i class="fas fa-search"></i>
-                                <input class="search-input2" type="text" placeholder="Search messages..." id="searchMessages" name='searchMessages'>
+                                <input class="search-input2" type="text" placeholder="Search messages..." id="searchMessages" name='searchMessages' autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
                             </div>
                         </div>
                         <div class="message-items" id="message-items"></div>
@@ -432,8 +428,7 @@ if (!isset($_SESSION['email']) ||!isset($_SESSION['role']) ||$_SESSION['role'] !
             </div>
         </div>
 
-    <script src="../adminActions/notifications.js"></script>
-    <script src="../adminActions/messages.js"></script>
-    <script src="../adminActions/global.js"></script>
+    <script src="../adminActions/messages.js?v=<?php echo time(); ?>"></script>
+    <script src="../adminActions/global.js?v=<?= urlencode((string)@filemtime(__DIR__ . '/../adminActions/global.js')); ?>"></script>
 </body>
 </html>

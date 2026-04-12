@@ -1,12 +1,11 @@
 <?php
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 include '../config.php';
+require_once '../auth_user.php';
+requireUser();
 
-if (!isset($_SESSION['email']) || $_SESSION['role'] !== 'user') {
-    die("Invalid role.");
-}
-
-$user_id = $_SESSION['email'];
+$user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['name'];
 
 $admin = $conn->query("SELECT email, name FROM users WHERE role='admin' LIMIT 1")->fetch_assoc();

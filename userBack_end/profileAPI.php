@@ -5,12 +5,29 @@
  * Used by: Actions/User/profile-account.js
  */
 require_once '../config.php';
-session_start();
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
+require_once __DIR__ . '/../session_bootstrap.php';
 
 header('Content-Type: application/json');
 
-// Must be logged in
-if (!isset($_SESSION['user_id'])) {
+function columnExists(mysqli $conn, string $table, string $column): bool {
+    $stmt = $conn->prepare(
+        "SELECT 1
+         FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?
+         LIMIT 1"
+    );
+    if (!$stmt) return false;
+    $stmt->bind_param('ss', $table, $column);
+    $stmt->execute();
+    $stmt->store_result();
+    $exists = $stmt->num_rows > 0;
+    $stmt->close();
+    return $exists;
+}
+
+// Must be logged in as user
+if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
     http_response_code(401);
     echo json_encode(['error' => 'Not authenticated']);
     exit();
@@ -21,11 +38,23 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 // ── GET — return profile data ─────────────────────────────────────────────────
 if ($method === 'GET') {
-    $stmt = $conn->prepare(
-        "SELECT user_id, first_name, last_name, username, email, phone,
-                address, city, province, zip_code, created_at
-         FROM users WHERE user_id = ? LIMIT 1"
-    );
+    $hasAddress = columnExists($conn, 'users', 'address');
+    $hasCity = columnExists($conn, 'users', 'city');
+    $hasProvince = columnExists($conn, 'users', 'province');
+    $hasZip = columnExists($conn, 'users', 'zip_code');
+
+    $selectAddress = $hasAddress ? 'address' : "'' AS address";
+    $selectCity = $hasCity ? 'city' : "'' AS city";
+    $selectProvince = $hasProvince ? 'province' : "'' AS province";
+    $selectZip = $hasZip ? 'zip_code' : "'' AS zip_code";
+
+    $sql = "SELECT user_id, first_name, last_name, username, email, phone, $selectAddress, $selectCity, $selectProvince, $selectZip, created_at FROM users WHERE user_id = ? LIMIT 1";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Failed to prepare profile query']);
+        exit();
+    }
     $stmt->bind_param('i', $userId);
     $stmt->execute();
     $row = $stmt->get_result()->fetch_assoc();
@@ -120,9 +149,18 @@ if ($method === 'POST') {
         $province = trim($input['province'] ?? '');
         $zipCode  = trim($input['zipCode']  ?? '');
 
-        $stmt = $conn->prepare(
-            "UPDATE users SET address=?, city=?, province=?, zip_code=? WHERE user_id=?"
-        );
+        $hasAddress = columnExists($conn, 'users', 'address');
+        $hasCity = columnExists($conn, 'users', 'city');
+        $hasProvince = columnExists($conn, 'users', 'province');
+        $hasZip = columnExists($conn, 'users', 'zip_code');
+
+        if (!$hasAddress || !$hasCity || !$hasProvince || !$hasZip) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Address columns are missing in users table']);
+            exit();
+        }
+
+        $stmt = $conn->prepare("UPDATE users SET address=?, city=?, province=?, zip_code=? WHERE user_id=?");
         $stmt->bind_param('ssssi', $address, $city, $province, $zipCode, $userId);
         $ok = $stmt->execute();
         $stmt->close();

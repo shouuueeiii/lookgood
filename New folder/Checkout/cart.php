@@ -219,7 +219,7 @@
         /* hide spinners */
         .qty-input::-webkit-inner-spin-button,
         .qty-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-        .qty-input[type=number] { -moz-appearance: textfield; }
+        .qty-input[type=number] { appearance: textfield; -moz-appearance: textfield; }
 
         /* ─── PRICE CELLS ──────────────────────────────────────────────── */
         .cell-price { font-size: 13px; font-weight: 500; text-align: center; color: var(--ink-mid); }
@@ -1085,8 +1085,10 @@ document.getElementById('proceedCheckoutBtn').addEventListener('click', () => {
     const discountPct    = activeVoucher ? Math.min(activeVoucher.discountPercent, 100) : 0;
     const discountAmount = subtotal * (discountPct / 100);
     const total          = subtotal - discountAmount;
+    const clientOrderRef = 'ORD-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();
 
     localStorage.setItem('lookgood_checkout_data', JSON.stringify({
+        clientOrderRef,
         items: selectedItems,
         appliedVouchers: activeVoucher ? [activeVoucher] : [],
         subtotal, discountAmount, total

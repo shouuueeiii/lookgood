@@ -10,6 +10,24 @@ require_once __DIR__ . '/../../PHPMailer/src/Exception.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+function ensureUsersPhoneColumn(mysqli $conn): void {
+    $check = $conn->prepare("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'phone' LIMIT 1");
+    if (!$check) {
+        return;
+    }
+
+    $check->execute();
+    $check->store_result();
+    $exists = $check->num_rows > 0;
+    $check->close();
+
+    if (!$exists) {
+        $conn->query("ALTER TABLE users ADD COLUMN phone VARCHAR(20) NULL AFTER email");
+    }
+}
+
+ensureUsersPhoneColumn($conn);
+
 $input = json_decode(file_get_contents('php://input'), true);
 $isResend = !empty($_SESSION['pending_user']);
 

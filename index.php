@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session_bootstrap.php';
 
 $errors = [
     'login' => $_SESSION['login_error'] ?? '',
@@ -8,7 +8,7 @@ $errors = [
 
 $activeForm = $_SESSION['active_form'] ?? 'login';
 
-session_unset();
+unset($_SESSION['login_error'], $_SESSION['register_error'], $_SESSION['active_form']);
 
 function showError($error) {
     return !empty($error) ? "<p class='error-message'>$error</p>" : '';
@@ -52,17 +52,7 @@ function isActiveForm($formName, $activeForm) {
             <input type="email" name="email" placeholder="Email" required>
             <input type="text" name = "username" placeholder = "Username" required>
             <input type="password" name="password" placeholder="Password" required>
-
-            <select name="role" required>
-                <option value="">--Select Role--</option>
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
-            </select>
-
-            <button type="submit" name="register">Register</button>
-
-            <p>Already have an account?
-                <a href="#" onclick="showForm('login-box')">Login</a>
+                <input type="hidden" name="role" value="user">
             </p>
         </form>
     </div>

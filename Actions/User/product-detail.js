@@ -8,6 +8,21 @@
         const PRODUCTS_API_DETAIL = '../../userBack_end/productsAPI.php';
 
         const REVIEWS_DATA = {
+          'LGF-U-001-26': {
+            avg: 4.8, count: 143,
+            breakdown: { 5: 98, 4: 30, 3: 10, 2: 3, 1: 2 },
+            reviews: [
+              {
+                name: 'Marcus T.', date: 'March 12, 2025', rating: 5, text: 'Absolutely love these frames. The gold and black combo goes with literally everything — dressed up or casual. Build quality is solid and they sit comfortably all day.', verified: true, color: '#2c6fad',
+                response: { date: 'March 14, 2025', text: 'Thank you so much, Marcus! The Midnight Maverick is one of our bestsellers for exactly that reason — it just works with everything. We\'re thrilled it\'s a great fit for you!' }
+              },
+              { name: 'Jessa R.', date: 'February 28, 2025', rating: 5, text: 'Bought these for my partner and he literally hasn\'t taken them off. Looks amazing on him. The stainless steel is lightweight but sturdy — exactly what we were looking for.', verified: true, color: '#a0522d' },
+              {
+                name: 'Paolo V.', date: 'February 10, 2025', rating: 4, text: 'Great frames overall. The finish is premium and they look exactly like the photos. Knocked off one star only because delivery took a bit longer than expected, but the product itself is perfect.', verified: true, color: '#1a7a4a',
+                response: { date: 'February 12, 2025', text: 'Hi Paolo! We appreciate your patience and honest feedback. We\'re working on improving our delivery timelines. Glad you love the frames themselves!' }
+              },
+            ]
+          },
           'unisex-1': {
             avg: 4.8, count: 143,
             breakdown: { 5: 98, 4: 30, 3: 10, 2: 3, 1: 2 },
@@ -39,6 +54,15 @@
             ]
           }
         };
+
+        function resolveReviewKey(productId, category) {
+          if (REVIEWS_DATA[productId]) return productId;
+          const normalizedCategory = String(category || '').toLowerCase();
+          if (normalizedCategory === 'unisex') return 'LGF-U-001-26';
+          if (normalizedCategory === 'female' || normalizedCategory === 'women') return 'LGF-W-001-26';
+          if (normalizedCategory === 'male' || normalizedCategory === 'men') return 'LGF-M-001-26';
+          return 'default';
+        }
 
         // ============================================================
         // GLOBALS
@@ -118,7 +142,7 @@
 
           loadGallery(currentProduct.images || [currentProduct.image]);
           loadRelatedProducts(currentProduct.category, currentProduct.id);
-          loadReviews(currentProduct.id);
+          loadReviews(currentProduct.id, currentProduct.category);
         }
 
         function updateStockRemainingMsg(stock) {
@@ -198,7 +222,7 @@
             <article class="product-col" data-category="${p.category}" data-product-id="${p.id}">
               <div class="product-card" tabindex="0" role="button" aria-label="View details for ${p.name}">
                 <div class="product-image-wrapper">
-                  <img src="${p.image}" alt="${p.name} frames" class="product-image" loading="lazy" onerror="this.src='../../Resources/Images/glasses1.png'">
+                  <img src="${p.image}" alt="${p.name} frames" class="product-image" loading="lazy" onerror="this.onerror=null;this.src='/lookgood/New%20folder/Resources/Images/glasses1.png';">
                   <span class="stock-badge"><i class="fas fa-box-open"></i> ${p.stock} in stock</span>
                 </div>
                 <div class="product-info">
@@ -245,8 +269,8 @@
           }).join('');
         }
 
-        function loadReviews(productId) {
-          const data = REVIEWS_DATA[productId] || REVIEWS_DATA['default'];
+        function loadReviews(productId, category) {
+          const data = REVIEWS_DATA[resolveReviewKey(productId, category)] || REVIEWS_DATA['default'];
           document.getElementById('reviewsAvgScore').textContent = data.avg.toFixed(1);
           document.getElementById('reviewsStars').innerHTML = starsHTML(data.avg, 16);
           document.getElementById('reviewsCountLabel').textContent = `Based on ${data.count} reviews`;
