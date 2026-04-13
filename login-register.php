@@ -100,7 +100,7 @@ if (isset($_POST['login'])) {
             if ($user['role'] === 'admin') {
                 header("Location: admin/dashboard.php");
             } else {
-                header("Location: " . ($redirect ?: "user/mainpage.php"));
+                header("Location: " . ($redirect ?: "/New folder/Homepage/index.php"));
             }
 
             exit();

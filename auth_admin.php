@@ -12,14 +12,14 @@ function isAdmin() {
     return isLoggedIn() && $_SESSION['role'] === 'admin';
 }
 
-function requireLogin($redirect = '../index.php') {
+function requireLogin($redirect = 'New folder/Login/user-login.php') {
     if (!isLoggedIn()) {
         header("Location: $redirect");
         exit();
     }
 }
 
-function requireAdmin($redirect = '../index.php') {
+function requireAdmin($redirect = 'New folder/Admin/admin-login.php') {
     if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') return;
 
     // Recover admin session for fallback admin credential flow.

@@ -187,7 +187,7 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
       <!-- WISHLIST PANEL -->
       <section id="panel-wishlist" class="profile-panel">
         <div class="panel-section-header"><h2 class="panel-section-title">My Wishlist</h2><p class="panel-section-sub">Items you've saved from the store</p></div>
-        <div class="empty-state" id="wishlist-empty" style="display: none;"><i class="fas fa-heart-broken empty-state-icon"></i><p class="empty-state-text">Your wishlist is empty.</p><a href="../Products/products-page.html" class="btn-browse"><i class="fas fa-glasses"></i> Browse Frames</a></div>
+        <div class="empty-state" id="wishlist-empty" style="display: none;"><i class="fas fa-heart-broken empty-state-icon"></i><p class="empty-state-text">Your wishlist is empty.</p><a href="../Homepage/index.php" class="btn-browse"><i class="fas fa-glasses"></i> Browse Frames</a></div>
         <div class="wishlist-grid" id="wishlistGrid"></div>
       </section>
 

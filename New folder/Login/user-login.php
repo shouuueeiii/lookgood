@@ -4,8 +4,6 @@ require_once '../../config.php';
 
 $error = '';
 
-// --- MOCK BANNED ACCOUNT (for testing ban page) ---
-// This works without any database columns
 $mock_banned_email = 'banned@example.com';
 $mock_banned_pass = 'banned123';
 

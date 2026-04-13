@@ -703,11 +703,18 @@
 /* ===================================================================
    VALID VOUCHERS
    =================================================================== */
-const VALID_VOUCHERS = [
-    { code: 'NEWUSER50',   discountPercent: 50,  description: '50% off for new users' },
-    { code: 'FLASHSALE100',discountPercent: 100, description: '100% off flash sale'   },
-    { code: 'WELCOME20',   discountPercent: 20,  description: '20% off welcome'        }
-];
+let VALID_VOUCHERS = [];
+
+async function loadVouchers() {
+    try {
+        const res = await fetch('../../user/get_discount.php');
+        VALID_VOUCHERS = await res.json();
+    } catch(e) {
+        console.error('Could not load vouchers:', e);
+        VALID_VOUCHERS = [];
+    }
+}
+
 
 /* ===================================================================
    STATE
@@ -720,7 +727,9 @@ let bnSelected    = true;
 /* ===================================================================
    LOAD
    =================================================================== */
-function loadData() {
+async function loadData() {
+    await loadVouchers();   // ← fetch from DB first
+
     try {
         const raw = localStorage.getItem('lookgood_buynow');
         if (raw) buyNowItem = JSON.parse(raw);
@@ -731,7 +740,6 @@ function loadData() {
         if (raw) cartItems = JSON.parse(raw).map(i => ({ ...i, selected: false, quantity: i.quantity || 1 }));
     } catch(e) { cartItems = []; }
 
-    // If buyNow item is also in cart, merge quantities
     if (buyNowItem) {
         const dup = cartItems.findIndex(i => i.id === buyNowItem.id);
         if (dup !== -1) {
@@ -744,9 +752,7 @@ function loadData() {
     renderCart();
 }
 
-/* ===================================================================
-   RENDER
-   =================================================================== */
+
 function renderCart() {
     const buyNowDiv     = document.getElementById('buyNowRow');
     const cartContainer = document.getElementById('cartItemsContainer');
@@ -754,7 +760,6 @@ function renderCart() {
     const emptyMsg      = document.getElementById('emptyCartMsg');
     const footer        = document.getElementById('cartFooter');
 
-    /* — Buy Now Row — */
     if (buyNowItem) {
         buyNowDiv.style.display = 'grid';
         const STOCK = 10;
@@ -787,7 +792,6 @@ function renderCart() {
         buyNowDiv.style.display = 'none';
     }
 
-    /* — Cart Rows — */
     const hasItems = cartItems.length > 0;
     alsoDivider.style.display = (hasItems && buyNowItem) ? 'flex' : 'none';
     emptyMsg.style.display    = hasItems ? 'none' : (buyNowItem ? 'none' : 'block');
@@ -829,9 +833,7 @@ function renderCart() {
     updateTotalsAndFooter();
 }
 
-/* ===================================================================
-   ATTACH EVENTS – BUY NOW ROW
-   =================================================================== */
+
 function attachBuyNowEvents() {
     const cb       = document.getElementById('bnCheckbox');
     const decrBtn  = document.querySelector('.bn-decr');
@@ -861,9 +863,6 @@ function changeBuyNowQty(delta, newVal = null) {
     renderCart();
 }
 
-/* ===================================================================
-   ATTACH EVENTS – CART ROWS
-   =================================================================== */
 function attachCartEvents() {
     document.querySelectorAll('.cart-checkbox').forEach(chk => {
         chk.onchange = e => {
@@ -906,9 +905,6 @@ function saveCart() {
     ));
 }
 
-/* ===================================================================
-   TOTALS & FOOTER STATE
-   =================================================================== */
 function getSelectedSubtotal() {
     let sum = 0;
     if (buyNowItem && bnSelected) sum += buyNowItem.price * (buyNowItem.quantity || 1);
@@ -917,15 +913,29 @@ function getSelectedSubtotal() {
 }
 
 function updateTotalsAndFooter() {
-    const subtotal       = getSelectedSubtotal();
-    const discountPct    = activeVoucher ? Math.min(activeVoucher.discountPercent, 100) : 0;
-    const discountAmount = subtotal * (discountPct / 100);
-    const grandTotal     = subtotal - discountAmount;
+    const subtotal = getSelectedSubtotal();
 
-    document.getElementById('subtotalDisplay').textContent  = '₱' + subtotal.toFixed(2);
+    let discountAmount = 0;
+    let discountPercent = 0;
+    if (activeVoucher) {
+        if (activeVoucher.type === 'Percentage') {
+            discountPercent = activeVoucher.discountValue / 100;
+            discountAmount = subtotal * discountPercent;
+            // Apply maxDiscount cap if set
+            if (activeVoucher.maxDiscount !== null) {
+                discountAmount = Math.min(discountAmount, activeVoucher.maxDiscount);
+            }
+        } else if (activeVoucher.type === 'Fixed Amount') {
+            discountAmount = Math.min(activeVoucher.discountValue, subtotal);
+        }
+    }
+
+    const grandTotal = subtotal - discountAmount;
+
+    document.getElementById('subtotalDisplay').textContent   = '₱' + subtotal.toFixed(2);
     document.getElementById('grandTotalDisplay').textContent = '₱' + grandTotal.toFixed(2);
 
-    /* Discount info line (always reserves space – just text changes) */
+    // Discount info line
     const infoEl = document.getElementById('discountInfo');
     if (activeVoucher && discountAmount > 0) {
         infoEl.innerHTML = `<i class="fas fa-gift"></i> ${activeVoucher.code} saves you ₱${discountAmount.toFixed(2)}`;
@@ -933,33 +943,33 @@ function updateTotalsAndFooter() {
         infoEl.innerHTML = '';
     }
 
-    /* Applied badge */
+    // Applied badge
     const badge    = document.getElementById('appliedVoucherDisplay');
     const badgeTxt = document.getElementById('appliedVoucherText');
     if (activeVoucher) {
-        badgeTxt.textContent = `${activeVoucher.code} (${activeVoucher.discountPercent}% off)`;
+        const label = activeVoucher.type === 'Percentage'
+            ? `${activeVoucher.code} (${activeVoucher.discountValue}% off)`
+            : `${activeVoucher.code} (₱${parseFloat(activeVoucher.discountValue).toFixed(2)} off)`;
+        badgeTxt.textContent = label;
         badge.classList.add('visible');
     } else {
         badge.classList.remove('visible');
     }
 
-    /* Selected count */
-    let selectedCount  = (buyNowItem && bnSelected) ? 1 : 0;
-    selectedCount     += cartItems.filter(i => i.selected).length;
+    // Selected count
+    let selectedCount = (buyNowItem && bnSelected) ? 1 : 0;
+    selectedCount    += cartItems.filter(i => i.selected).length;
     document.getElementById('totalItemsBadge').textContent =
         `${selectedCount} item${selectedCount !== 1 ? 's' : ''} selected`;
 
-    /* Wishlist btn */
     document.getElementById('moveWishlistBtn').disabled = (selectedCount === 0);
 
-    /* Select all checkbox state */
-    const selectAll = document.getElementById('selectAllCheckbox');
+    const selectAll      = document.getElementById('selectAllCheckbox');
     const totalCheckable = (buyNowItem ? 1 : 0) + cartItems.length;
     const allSelected    = selectedCount === totalCheckable && totalCheckable > 0;
     selectAll.checked       = allSelected;
     selectAll.indeterminate = selectedCount > 0 && !allSelected;
 
-    /* Checkout btn */
     const hasValid =
         (buyNowItem && bnSelected && (buyNowItem.quantity || 1) <= 10) ||
         cartItems.some(i => i.selected && i.quantity <= 10);
@@ -1007,7 +1017,12 @@ function applyVoucher() {
         setTimeout(() => voucherCodeInput.placeholder = 'Voucher code…', 2500);
         return;
     }
-    activeVoucher = { code: found.code, discountPercent: found.discountPercent };
+    activeVoucher = {
+        code:          found.code,
+        type:          found.type,
+        discountValue: found.discountValue,
+        maxDiscount:   found.maxDiscount ?? null
+    };
     updateTotalsAndFooter();
     closeVoucherInput();
 }
@@ -1081,9 +1096,20 @@ document.getElementById('proceedCheckoutBtn').addEventListener('click', () => {
     cartItems.forEach(i => { if (i.selected) selectedItems.push({ ...i }); });
     if (!selectedItems.length) { alert('No items selected.'); return; }
 
-    const subtotal       = getSelectedSubtotal();
-    const discountPct    = activeVoucher ? Math.min(activeVoucher.discountPercent, 100) : 0;
-    const discountAmount = subtotal * (discountPct / 100);
+    const subtotal = getSelectedSubtotal();
+
+    let discountAmount = 0;
+    if (activeVoucher) {
+        if (activeVoucher.type === 'Percentage') {
+            discountAmount = subtotal * (activeVoucher.discountValue / 100);
+            if (activeVoucher.maxDiscount !== null) {
+                discountAmount = Math.min(discountAmount, activeVoucher.maxDiscount);
+            }
+        } else if (activeVoucher.type === 'Fixed Amount') {
+            discountAmount = Math.min(activeVoucher.discountValue, subtotal);
+        }
+    }
+
     const total          = subtotal - discountAmount;
     const clientOrderRef = 'ORD-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();
 
@@ -1091,7 +1117,9 @@ document.getElementById('proceedCheckoutBtn').addEventListener('click', () => {
         clientOrderRef,
         items: selectedItems,
         appliedVouchers: activeVoucher ? [activeVoucher] : [],
-        subtotal, discountAmount, total
+        subtotal:       parseFloat(subtotal.toFixed(2)),
+        discountAmount: parseFloat(discountAmount.toFixed(2)),
+        total:          parseFloat(total.toFixed(2))
     }));
     window.location.href = 'checkout.php';
 });
