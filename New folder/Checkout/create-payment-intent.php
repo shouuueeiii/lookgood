@@ -1,101 +1,111 @@
 <?php
-// create-payment-intent.php, dito napupunta after checkout.php and before success.php
+// create-checkout-session.php
+// Replacement for the old create-payment-intent.php
+// Keeps the same request/response shape: amount, name, email -> redirect_url
+
 require_once 'config.php';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
 $input = json_decode(file_get_contents('php://input'), true);
-$amount = $input['amount'] ?? 0;
-$name = $input['name'] ?? 'Customer';
-$email = $input['email'] ?? 'customer@example.com';
+
+$amount = (int)($input['amount'] ?? 0); // amount in centavos
+$name   = trim($input['name'] ?? 'Customer');
+$email  = trim($input['email'] ?? 'customer@example.com');
 
 if ($amount <= 0) {
     http_response_code(400);
-    echo json_encode(['error' => 'Invalid amount']);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Invalid amount'
+    ]);
     exit;
 }
 
-// Build callback base from project root only, never from "New folder" path.
-$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$scriptPath = trim((string)($_SERVER['SCRIPT_NAME'] ?? '/lookgood/New%20folder/Checkout/create-payment-intent.php'));
-
-// Example: /lookgood/New%20folder/Checkout/create-payment-intent.php -> /lookgood
-$parts = array_values(array_filter(explode('/', $scriptPath), static function ($p) {
-    return $p !== '';
-}));
-$projectRoot = isset($parts[0]) ? '/' . $parts[0] : '/lookgood';
-
-// PayMongo rejects encoded-space callback URLs, so route through /payment endpoints.
-$callbackBase = $scheme . '://' . $host . $projectRoot . '/payment';
-$successUrl = $callbackBase . '/success.php';
-$failedUrl  = $callbackBase . '/cancel.php';
-
-$payload = json_encode([
-    'data' => [
-        'attributes' => [
-            'amount'   => $amount,
-            'type'     => 'gcash',
-            'currency' => 'PHP',
-            'redirect' => [
-                'success' => $successUrl,
-                'failed'  => $failedUrl
-            ],
-            'billing' => [
-                'name'  => $name,
-                'email' => $email
-            ]
-        ]
-    ]
-]);
-
-$response = null;
-$httpCode = 0;
-$curlErr  = '';
-
-// Retry once for transient upstream/network issues.
-for ($attempt = 1; $attempt <= 2; $attempt++) {
-    $ch = curl_init('https://api.paymongo.com/v1/sources');
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_USERPWD, PAYMONGO_SECRET_KEY . ':');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 25);
-
-    $response = curl_exec($ch);
-    $httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curlErr = curl_error($ch);
-    curl_close($ch);
-
-    if ($response !== false && $httpCode === 200) {
-        break;
-    }
+$siteBase = rtrim((string)SITE_URL, '/');
+$projectBase = preg_replace('#/New%20folder/Checkout$#i', '', $siteBase);
+if ($projectBase === null || $projectBase === '') {
+    $projectBase = $siteBase;
 }
 
-if ($httpCode !== 200) {
+$successUrl = $projectBase . '/payment/success.php';
+$cancelUrl  = $projectBase . '/payment/cancel.php';
+
+$payload = [
+    'data' => [
+        'attributes' => [
+            'billing' => [
+                'name' => $name,
+                'email' => $email,
+                'phone' => '09123456789',
+                'address' => [
+                    'line1' => 'N/A',
+                    'line2' => '',
+                    'city' => 'Manila',
+                    'state' => 'Metro Manila',
+                    'postal_code' => '1000',
+                    'country' => 'PH'
+                ]
+            ],
+            'send_email_receipt' => true,
+            'show_description' => true,
+            'show_line_items' => true,
+            'description' => 'GCash Checkout Payment',
+            'line_items' => [
+                [
+                    'currency' => 'PHP',
+                    'amount' => $amount,
+                    'name' => 'Order Payment',
+                    'quantity' => 1
+                ]
+            ],
+            'payment_method_types' => ['gcash'],
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl
+        ]
+    ]
+];
+
+$ch = curl_init('https://api.paymongo.com/v1/checkout_sessions');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'accept: application/json',
+    'content-type: application/json',
+    'authorization: Basic ' . base64_encode(PAYMONGO_SECRET_KEY . ':')
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+
+$response = curl_exec($ch);
+$curlError = curl_error($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($curlError) {
     http_response_code(500);
     echo json_encode([
-        'error' => 'PayMongo API error',
-        'http_code' => $httpCode,
-        'curl_error' => $curlErr,
-        'details' => json_decode($response, true),
-        'raw_response' => is_string($response) ? $response : null
+        'success' => false,
+        'error' => 'Curl error',
+        'details' => $curlError
     ]);
     exit;
 }
 
 $result = json_decode($response, true);
-$checkoutUrl = $result['data']['attributes']['redirect']['checkout_url'] ?? null;
 
-if (!$checkoutUrl) {
+if ($httpCode < 200 || $httpCode >= 300 || !isset($result['data']['attributes']['checkout_url'])) {
     http_response_code(500);
-    echo json_encode(['error' => 'Missing checkout URL from PayMongo']);
+    echo json_encode([
+        'success' => false,
+        'error' => 'PayMongo Checkout API error',
+        'details' => $result
+    ]);
     exit;
 }
 
 echo json_encode([
-    'success'      => true,
-    'redirect_url' => $checkoutUrl
+    'success' => true,
+    'redirect_url' => $result['data']['attributes']['checkout_url'],
+    'checkout_session_id' => $result['data']['id'] ?? null
 ]);
