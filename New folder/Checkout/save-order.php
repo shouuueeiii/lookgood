@@ -65,19 +65,38 @@ function ensureClientOrderRefColumn(mysqli $conn): void {
     }
 }
 
+// ── Ensure discount_usage tracking table exists ─────────────────────────────
+function ensureDiscountUsageTable(mysqli $conn): void {
+    $conn->query("
+        CREATE TABLE IF NOT EXISTS discount_usage (
+            id           INT AUTO_INCREMENT PRIMARY KEY,
+            discountCode VARCHAR(100) NOT NULL,
+            user_id      INT          NOT NULL,
+            order_id     INT          NULL,
+            used_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_du_code  (discountCode),
+            INDEX idx_du_user  (user_id),
+            INDEX idx_du_order (order_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+}
+
 ensureClientOrderRefColumn($conn);
+ensureDiscountUsageTable($conn);
 
 $input = json_decode(file_get_contents('php://input'), true) ?: [];
 $order = $input['order'] ?? [];
 
-$clientRef = trim((string)($order['clientOrderRef'] ?? ''));
-$items = $order['items'] ?? [];
-$customer = $order['customer'] ?? [];
-$paymentMethod = trim((string)($order['paymentMethod'] ?? ''));
-$shippingFee = (float)($order['shippingFee'] ?? 0);
-$subtotal = (float)($order['subtotal'] ?? 0);
-$discount = (float)($order['discount'] ?? 0);
-$total = (float)($order['total'] ?? 0);
+$clientRef      = trim((string)($order['clientOrderRef'] ?? ''));
+$items          = $order['items'] ?? [];
+$customer       = $order['customer'] ?? [];
+$paymentMethod  = trim((string)($order['paymentMethod'] ?? ''));
+$shippingFee    = (float)($order['shippingFee'] ?? 0);
+$subtotal       = (float)($order['subtotal'] ?? 0);
+$discount       = (float)($order['discount'] ?? 0);
+$total          = (float)($order['total'] ?? 0);
+// ── Pull applied vouchers from the payload ───────────────────────────────────
+$appliedVouchers = $order['appliedVouchers'] ?? [];   // array of {code, type, ...}
 
 if ($clientRef === '' || !is_array($items) || empty($items)) {
     http_response_code(400);
@@ -86,8 +105,8 @@ if ($clientRef === '' || !is_array($items) || empty($items)) {
 }
 
 $fullName = trim((string)($customer['fullName'] ?? ''));
-$email = trim((string)($customer['email'] ?? ($_SESSION['email'] ?? '')));
-$phone = trim((string)($customer['phone'] ?? ''));
+$email    = trim((string)($customer['email'] ?? ($_SESSION['email'] ?? '')));
+$phone    = trim((string)($customer['phone'] ?? ''));
 $addressParts = array_filter([
     trim((string)($customer['address1'] ?? '')),
     trim((string)($customer['address2'] ?? '')),
@@ -96,7 +115,7 @@ $addressParts = array_filter([
     trim((string)($customer['region'] ?? ''))
 ], static fn($value) => $value !== '');
 $address = implode(', ', $addressParts);
-$zip = trim((string)($customer['zip'] ?? ''));
+$zip     = trim((string)($customer['zip'] ?? ''));
 
 if ($fullName === '' || $email === '' || $phone === '' || $address === '' || $zip === '') {
     http_response_code(400);
@@ -123,6 +142,9 @@ $existing->close();
 $conn->begin_transaction();
 
 try {
+    $userId = (int)$_SESSION['user_id'];
+
+    // ── 1. Insert order ──────────────────────────────────────────────────────
     $insert = $conn->prepare(
         'INSERT INTO checkout (user_id, client_order_ref, total_amount, full_name, email, phone, address, zip, payment_method, shipping_fee, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
@@ -131,7 +153,6 @@ try {
     }
 
     $status = 'pending';
-    $userId = (int)$_SESSION['user_id'];
     $insert->bind_param('isdsssssdss', $userId, $clientRef, $total, $fullName, $email, $phone, $address, $zip, $paymentMethod, $shippingFee, $status);
     if (!$insert->execute()) {
         throw new Exception('Failed to save order');
@@ -140,6 +161,7 @@ try {
     $orderId = (int)$insert->insert_id;
     $insert->close();
 
+    // ── 2. Insert order items + deduct stock ─────────────────────────────────
     $itemStmt = $conn->prepare('INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
     if (!$itemStmt) {
         throw new Exception('Failed to prepare order item insert');
@@ -152,8 +174,8 @@ try {
 
     foreach ($items as $item) {
         $productId = trim((string)($item['id'] ?? ''));
-        $quantity = max(1, (int)($item['quantity'] ?? 1));
-        $price = (float)($item['price'] ?? 0);
+        $quantity  = max(1, (int)($item['quantity'] ?? 1));
+        $price     = (float)($item['price'] ?? 0);
 
         if ($productId === '' || $price <= 0) {
             throw new Exception('Invalid order item data');
@@ -173,6 +195,70 @@ try {
     $itemStmt->close();
     $stockStmt->close();
 
+    // ── 3. Record discount usage + enforce limits ────────────────────────────
+    foreach ($appliedVouchers as $voucher) {
+        $voucherCode = strtoupper(trim((string)($voucher['code'] ?? '')));
+        if ($voucherCode === '') continue;
+
+        // Lock the discount row so concurrent orders can't race past the limit
+        $discStmt = $conn->prepare("
+            SELECT totalUsageLimit, perUserLimit
+            FROM discount
+            WHERE discountCode = ?
+              AND NOW() BETWEEN startDate AND endDate
+            LIMIT 1
+            FOR UPDATE
+        ");
+        if (!$discStmt) throw new Exception('Failed to prepare discount lookup');
+        $discStmt->bind_param('s', $voucherCode);
+        $discStmt->execute();
+        $discRow = $discStmt->get_result()->fetch_assoc();
+        $discStmt->close();
+
+        if (!$discRow) {
+            throw new Exception("Voucher '{$voucherCode}' is no longer valid.");
+        }
+
+        // Count how many times this voucher has been used globally
+        $totalUsedStmt = $conn->prepare('SELECT COUNT(*) AS cnt FROM discount_usage WHERE discountCode = ?');
+        if (!$totalUsedStmt) throw new Exception('Failed to count global usage');
+        $totalUsedStmt->bind_param('s', $voucherCode);
+        $totalUsedStmt->execute();
+        $totalUsed = (int)$totalUsedStmt->get_result()->fetch_assoc()['cnt'];
+        $totalUsedStmt->close();
+
+        if ($totalUsed >= (int)$discRow['totalUsageLimit']) {
+            throw new Exception("Voucher '{$voucherCode}' has reached its total usage limit.");
+        }
+
+        if ($discRow['perUserLimit'] !== null) {
+            $userUsedStmt = $conn->prepare('SELECT COUNT(*) AS cnt FROM discount_usage WHERE discountCode = ? AND user_id = ?');
+            if (!$userUsedStmt) throw new Exception('Failed to count user usage');
+            $userUsedStmt->bind_param('si', $voucherCode, $userId);
+            $userUsedStmt->execute();
+            $userUsed = (int)$userUsedStmt->get_result()->fetch_assoc()['cnt'];
+            $userUsedStmt->close();
+
+            if ($userUsed >= (int)$discRow['perUserLimit']) {
+                throw new Exception("You have already used voucher '{$voucherCode}' the maximum number of times.");
+            }
+        }
+
+        $usageStmt = $conn->prepare('INSERT INTO discount_usage (discountCode, user_id, order_id) VALUES (?, ?, ?)');
+        if (!$usageStmt) throw new Exception('Failed to prepare usage insert');
+        $usageStmt->bind_param('sii', $voucherCode, $userId, $orderId);
+        if (!$usageStmt->execute()) {
+            throw new Exception("Failed to record usage for voucher '{$voucherCode}'");
+        }
+        $usageStmt->close();
+
+        $deductStmt = $conn->prepare('UPDATE discount SET totalUsageLimit = GREATEST(totalUsageLimit - 1, 0) WHERE discountCode = ?');
+        if (!$deductStmt) throw new Exception('Failed to prepare limit deduction');
+        $deductStmt->bind_param('s', $voucherCode);
+        $deductStmt->execute();
+        $deductStmt->close();
+    }
+
     $conn->commit();
 
     pushAdminNotification(
@@ -185,6 +271,7 @@ try {
     );
 
     echo json_encode(['success' => true, 'order_id' => $orderId]);
+
 } catch (Throwable $e) {
     $conn->rollback();
     http_response_code(500);
