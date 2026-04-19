@@ -12,7 +12,7 @@ requireAdmin('../index.php');
         <title>Orders | Look Good Frames Admin</title>
         <link rel="stylesheet" href="../css/Admin/global.css?v=20260411c">
         <link rel="stylesheet" href="../css/Admin/notifications.css?v=20260411c">
-        <link rel="stylesheet" href="../css/Admin/orders.css?v=20260411c">
+        <link rel="stylesheet" href="../css/Admin/orders.css?v=20260419b">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
 
