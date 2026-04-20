@@ -1,9 +1,9 @@
 <?php
 require_once '../config.php';
 require_once '../auth_admin.php';
-requireAdmin('../index.php');
+requireAdmin('New%20folder/Login/user-login.php');
 if(isset($_SESSION['email'])){
-    $username = $_SESSION['first_name'] . ' ' . $_SESSION['last_name'] ?? null;
+    $username = $_SESSION['admin_name']?? null;
 }
 ?>
 
@@ -21,76 +21,7 @@ if(isset($_SESSION['email'])){
     </head>
 
     <body>
-        <aside class="sidebar">
-            <ul class="nav-links">
-
-                <li class="nav-item">
-                    <a href="dashboard.php" class="nav-link">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="product.php" class="nav-link">
-                        <i class="fas fa-box"></i>
-                        <span>Product</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="orders.php" class="nav-link">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Order</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="users.php" class="nav-link">
-                        <i class="fas fa-users"></i>
-                        <span>User</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="messages.php" class="nav-link">
-                        <i class="fas fa-envelope"></i>
-                        <span>Message</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="feedback.php" class="nav-link">
-                        <i class="fas fa-star"></i>
-                        <span>Feedback</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="report.php" class="nav-link">
-                        <i class="fas fa-file-alt"></i>
-                        <span>Report</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="notifications.php" class="nav-link">
-                        <i class="fas fa-bell"></i>
-                        <span>Notifications</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="settings.php" class="nav-link">
-                        <i class="fas fa-cog"></i>
-                        <span>Setting</span>
-                    </a>
-                </li>
-            </ul>
-            <div class="sidebar-toggle" id="sidebarToggle">
-                <i class="fas fa-chevron-left"></i>
-            </div>
-        </aside>
+        <?php $activePage = 'dashboard'; require_once __DIR__ . '/sidebar.php'; ?>
 
         <!--Header-->
 
@@ -154,6 +85,13 @@ if(isset($_SESSION['email'])){
             <!--Main Content-->
 
             <section class="content">
+            <?php if (!empty($_GET['access_denied'])): ?>
+            <div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:14px 20px;border-radius:8px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+                <i class="fas fa-lock"></i>
+                <strong>Access Denied.</strong>&nbsp;You don't have permission to view that page.
+            </div>
+            <?php endif; ?>
+
 
                 <div class="page-header" style="margin-bottom:24px;">
                     <h1>Store Overview</h1>

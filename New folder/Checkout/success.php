@@ -365,7 +365,7 @@ require_once __DIR__ . '/../../session_bootstrap.php';
 /* ═══════════════════════════════════════════════════════
    RENDER ORDER CONFIRMATION
    ═══════════════════════════════════════════════════════ */
-(function render() {
+(async function render() {
     const card = document.getElementById('successCard');
     let order = null;
 
@@ -507,9 +507,10 @@ require_once __DIR__ . '/../../session_bootstrap.php';
         </div>
     `;
 
-    // Save order to database if valid
+    // FIX: Await order save BEFORE clearing cart data so the order is guaranteed
+    // to be in the DB when the user visits their profile.
     if (order && order.items && order.items.length > 0 && clientOrderRef) {
-        persistOrder(order, clientOrderRef);
+        await persistOrder(order, clientOrderRef);
     } else {
         console.warn('Order data incomplete, skipping save:', { order, clientOrderRef });
     }

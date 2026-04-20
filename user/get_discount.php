@@ -1,5 +1,9 @@
 <?php
 
+// Session must start BEFORE any output and BEFORE reading $_SESSION['user_id']
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 header('Content-Type: application/json');
 require_once '../config.php';
@@ -28,7 +32,6 @@ if ($colCheck && $colCheck->num_rows === 0) {
     $conn->query("ALTER TABLE discount ADD COLUMN perUserLimit INT NULL AFTER totalUsageLimit");
 }
 
-session_start();
 $userId = isset($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : 0;
 
 $stmt = $conn->prepare("
@@ -42,13 +45,13 @@ $stmt = $conn->prepare("
         d.totalUsageLimit,
         d.perUserLimit,
         (SELECT COUNT(*) FROM discount_usage du
-         WHERE du.discountCode = d.discountCode) AS totalUsed,
+        WHERE du.discountCode = d.discountCode) AS totalUsed,
         (SELECT COUNT(*) FROM discount_usage du
-         WHERE du.discountCode = d.discountCode
-           AND du.user_id      = ?) AS userUsed
+        WHERE du.discountCode = d.discountCode
+        AND du.user_id      = ?) AS userUsed
     FROM discount d
     WHERE NOW() BETWEEN d.startDate AND d.endDate
-      AND d.totalUsageLimit > 0
+    AND d.totalUsageLimit > 0
 ");
 $stmt->bind_param('i', $userId);
 $stmt->execute();

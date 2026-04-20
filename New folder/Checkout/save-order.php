@@ -82,7 +82,6 @@ function ensureDiscountUsageTable(mysqli $conn): void {
 }
 
 ensureClientOrderRefColumn($conn);
-ensureCheckoutLogisticsColumns($conn);
 ensureDiscountUsageTable($conn);
 
 $input = json_decode(file_get_contents('php://input'), true) ?: [];
@@ -92,8 +91,6 @@ $clientRef      = trim((string)($order['clientOrderRef'] ?? ''));
 $items          = $order['items'] ?? [];
 $customer       = $order['customer'] ?? [];
 $paymentMethod  = trim((string)($order['paymentMethod'] ?? ''));
-$shippingMethod = trim((string)($order['shippingMethod'] ?? ''));
-$courierService = trim((string)($order['courierService'] ?? ''));
 $shippingFee    = (float)($order['shippingFee'] ?? 0);
 $subtotal       = (float)($order['subtotal'] ?? 0);
 $discount       = (float)($order['discount'] ?? 0);
@@ -119,10 +116,6 @@ $addressParts = array_filter([
 ], static fn($value) => $value !== '');
 $address = implode(', ', $addressParts);
 $zip     = trim((string)($customer['zip'] ?? ''));
-$deliveryNote = trim((string)($customer['note'] ?? ''));
-
-$estimatedDelivery = computeEstimatedDeliveryDate($shippingMethod);
-$trackingNumber = buildInitialTrackingNumber($clientRef, $courierService);
 
 if ($fullName === '' || $email === '' || $phone === '' || $address === '' || $zip === '') {
     http_response_code(400);
@@ -153,14 +146,14 @@ try {
 
     // ── 1. Insert order ──────────────────────────────────────────────────────
     $insert = $conn->prepare(
-        'INSERT INTO checkout (user_id, client_order_ref, total_amount, full_name, email, phone, address, zip, payment_method, shipping_method, courier_service, estimated_delivery, tracking_number, delivery_note, shipping_fee, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO checkout (user_id, client_order_ref, total_amount, full_name, email, phone, address, zip, payment_method, shipping_fee, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     if (!$insert) {
         throw new Exception('Failed to prepare order insert');
     }
 
     $status = 'pending';
-    $insert->bind_param('isdsssssssssssds', $userId, $clientRef, $total, $fullName, $email, $phone, $address, $zip, $paymentMethod, $shippingMethod, $courierService, $estimatedDelivery, $trackingNumber, $deliveryNote, $shippingFee, $status);
+    $insert->bind_param('isdsssssdss', $userId, $clientRef, $total, $fullName, $email, $phone, $address, $zip, $paymentMethod, $shippingFee, $status);
     if (!$insert->execute()) {
         throw new Exception('Failed to save order');
     }
@@ -174,7 +167,12 @@ try {
         throw new Exception('Failed to prepare order item insert');
     }
 
-    $stockStmt = $conn->prepare('UPDATE products SET stock = GREATEST(stock - ?, 0) WHERE product_id = ?');
+    $stockCheckStmt = $conn->prepare('SELECT stock FROM products WHERE product_id = ? LIMIT 1 FOR UPDATE');
+    if (!$stockCheckStmt) {
+        throw new Exception('Failed to prepare stock check');
+    }
+
+    $stockStmt = $conn->prepare('UPDATE products SET stock = GREATEST(CAST(stock AS SIGNED) - ?, 0) WHERE product_id = ?');
     if (!$stockStmt) {
         throw new Exception('Failed to prepare stock update');
     }
@@ -188,6 +186,16 @@ try {
             throw new Exception('Invalid order item data');
         }
 
+        // Check current stock before deducting
+        $stockCheckStmt->bind_param('s', $productId);
+        $stockCheckStmt->execute();
+        $stockRow = $stockCheckStmt->get_result()->fetch_assoc();
+        $currentStock = (int)($stockRow['stock'] ?? 0);
+
+        if ($currentStock < $quantity) {
+            throw new Exception("Insufficient stock for product '{$productId}'. Available: {$currentStock}, Requested: {$quantity}");
+        }
+
         $itemStmt->bind_param('isid', $orderId, $productId, $quantity, $price);
         if (!$itemStmt->execute()) {
             throw new Exception('Failed to save order item');
@@ -199,6 +207,7 @@ try {
         }
     }
 
+    $stockCheckStmt->close();
     $itemStmt->close();
     $stockStmt->close();
 
@@ -283,47 +292,4 @@ try {
     $conn->rollback();
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-}
-
-function addCheckoutColumnIfMissing(mysqli $conn, string $columnName, string $definition): void {
-    $stmt = $conn->prepare("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('checkout', 'checkOut') AND COLUMN_NAME = ? LIMIT 1");
-    if (!$stmt) return;
-    $stmt->bind_param('s', $columnName);
-    $stmt->execute();
-    $stmt->store_result();
-    $exists = $stmt->num_rows > 0;
-    $stmt->close();
-
-    if (!$exists) {
-        $conn->query("ALTER TABLE checkout ADD COLUMN {$columnName} {$definition}");
-    }
-}
-
-function ensureCheckoutLogisticsColumns(mysqli $conn): void {
-    addCheckoutColumnIfMissing($conn, 'shipping_method', "VARCHAR(80) NULL AFTER payment_method");
-    addCheckoutColumnIfMissing($conn, 'courier_service', "VARCHAR(120) NULL AFTER shipping_method");
-    addCheckoutColumnIfMissing($conn, 'estimated_delivery', "DATE NULL AFTER courier_service");
-    addCheckoutColumnIfMissing($conn, 'tracking_number', "VARCHAR(120) NULL AFTER estimated_delivery");
-    addCheckoutColumnIfMissing($conn, 'delivery_note', "TEXT NULL AFTER tracking_number");
-}
-
-function computeEstimatedDeliveryDate(string $shippingMethod): string {
-    $method = strtolower(trim($shippingMethod));
-    $daysToAdd = 4;
-    if ($method === 'free' || $method === 'free shipping') {
-        $daysToAdd = 6;
-    } elseif ($method === 'standard' || $method === 'standard shipping') {
-        $daysToAdd = 4;
-    } elseif ($method === 'express' || $method === 'express shipping') {
-        $daysToAdd = 1;
-    }
-    return date('Y-m-d', strtotime('+' . $daysToAdd . ' days'));
-}
-
-function buildInitialTrackingNumber(string $clientRef, string $courierService): string {
-    $rawRef = strtoupper(preg_replace('/[^A-Z0-9]/', '', $clientRef));
-    $suffix = $rawRef !== '' ? substr($rawRef, -10) : strtoupper(substr(bin2hex(random_bytes(6)), 0, 10));
-    $courierCode = strtoupper(substr(preg_replace('/[^A-Z]/', '', $courierService), 0, 3));
-    if ($courierCode === '') $courierCode = 'LGF';
-    return $courierCode . '-' . $suffix;
 }

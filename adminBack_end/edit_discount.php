@@ -3,6 +3,15 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../auth_admin.php';
 requireAdmin();
 
+// ── Role-based access control ─────────────────────────────────
+$_pos = $_SESSION['position'] ?? '';
+if ($_pos !== 'head' && $_pos !== 'inventory_orderAdmin') {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: insufficient permissions']);
+    exit();
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo 'Invalid request method';

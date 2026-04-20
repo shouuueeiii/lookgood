@@ -1,0 +1,1230 @@
+[2026-04-16 21:47:19] === LOGIN ATTEMPT START ===
+[2026-04-16 21:47:19] POST data: Array
+(
+    [emailOrUsername] => admin@lookgoodframes.com
+    [password] => 
+)
+
+[2026-04-16 21:47:19] Attempting login for: admin@lookgoodframes.com
+[2026-04-16 21:47:19] Error: Empty password
+[2026-04-16 21:47:19] === LOGIN ATTEMPT END ===
+
+[2026-04-16 21:47:25] === LOGIN ATTEMPT START ===
+[2026-04-16 21:47:25] POST data: Array
+(
+    [emailOrUsername] => admin@lookgoodframes.com
+    [password] => admin123
+)
+
+[2026-04-16 21:47:25] Attempting login for: admin@lookgoodframes.com
+[2026-04-16 21:47:25] Checking admin table...
+[2026-04-16 21:47:25] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 21:47:25] Admin query with 2 parameters
+[2026-04-16 21:47:25] Admin query result: No admin found
+[2026-04-16 21:47:25] Checking users table...
+[2026-04-16 21:47:25] User query rows found: 1
+[2026-04-16 21:47:25] User found: admin@lookgoodframes.com, Role: admin
+[2026-04-16 21:47:25] Password valid: NO
+[2026-04-16 21:47:25] Error: Invalid password
+[2026-04-16 21:47:25] === LOGIN ATTEMPT END ===
+
+[2026-04-16 21:47:44] === LOGIN ATTEMPT START ===
+[2026-04-16 21:47:44] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+    [remember] => on
+)
+
+[2026-04-16 21:47:44] Attempting login for: head@lookgoodframes.com
+[2026-04-16 21:47:44] Checking admin table...
+[2026-04-16 21:47:44] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 21:47:44] Admin query with 2 parameters
+[2026-04-16 21:47:44] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 21:47:44] Verifying admin password...
+[2026-04-16 21:47:44] Password valid: NO
+[2026-04-16 21:47:45] Checking users table...
+[2026-04-16 21:47:45] User query rows found: 0
+[2026-04-16 21:47:45] Error: No user account found
+[2026-04-16 21:47:45] === LOGIN ATTEMPT END ===
+
+[2026-04-16 21:47:46] === LOGIN ATTEMPT START ===
+[2026-04-16 21:47:46] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => 
+)
+
+[2026-04-16 21:47:46] Attempting login for: head@lookgoodframes.com
+[2026-04-16 21:47:46] Error: Empty password
+[2026-04-16 21:47:46] === LOGIN ATTEMPT END ===
+
+[2026-04-16 21:51:47] === LOGIN ATTEMPT START ===
+[2026-04-16 21:51:47] POST data: Array
+(
+    [emailOrUsername] => edrianhalili@gmail.com
+    [password] => 111111
+)
+
+[2026-04-16 21:51:47] Attempting login for: edrianhalili@gmail.com
+[2026-04-16 21:51:47] Checking admin table...
+[2026-04-16 21:51:47] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 21:51:47] Admin query with 2 parameters
+[2026-04-16 21:51:47] Admin query result: No admin found
+[2026-04-16 21:51:47] Checking users table...
+[2026-04-16 21:51:47] User query rows found: 1
+[2026-04-16 21:51:47] User found: edrianhalili@gmail.com, Role: user
+[2026-04-16 21:51:47] Password valid: YES
+[2026-04-16 21:51:47] USER LOGIN SUCCESSFUL for: edrianhalili@gmail.com
+[2026-04-16 21:51:47] Calling lg_switch_session_scope('user')
+[2026-04-16 21:51:47] New session ID: i4aghkphj18nf92ha3viorphqt
+[2026-04-16 21:51:47] Session data set: Array
+(
+    [__scope] => user
+    [user_id] => 4
+    [first_name] => Edrian
+    [last_name] => Halili
+    [email] => edrianhalili@gmail.com
+    [role] => user
+)
+
+[2026-04-16 21:51:47] Redirecting to homepage
+[2026-04-16 21:55:34] === LOGIN ATTEMPT START ===
+[2026-04-16 21:55:34] POST data: Array
+(
+)
+
+[2026-04-16 21:55:34] === LOGIN ATTEMPT END ===
+
+[2026-04-16 21:55:51] === LOGIN ATTEMPT START ===
+[2026-04-16 21:55:51] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 21:55:51] Attempting login for: head@lookgoodframes.com
+[2026-04-16 21:55:51] Checking admin table...
+[2026-04-16 21:55:51] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 21:55:51] Admin query with 2 parameters
+[2026-04-16 21:55:51] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 21:55:51] Verifying admin password...
+[2026-04-16 21:55:51] Password valid: NO
+[2026-04-16 21:55:52] Checking users table...
+[2026-04-16 21:55:52] User query rows found: 0
+[2026-04-16 21:55:52] Error: No user account found
+[2026-04-16 21:55:52] === LOGIN ATTEMPT END ===
+
+[2026-04-16 22:03:11] === LOGIN ATTEMPT START ===
+[2026-04-16 22:03:11] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 22:03:11] Attempting login for: head@lookgoodframes.com
+[2026-04-16 22:03:11] Checking admin table...
+[2026-04-16 22:03:11] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 22:03:11] Admin query with 2 parameters
+[2026-04-16 22:03:11] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 22:03:11] Verifying admin password...
+[2026-04-16 22:03:11] Password valid: NO
+[2026-04-16 22:03:12] Checking users table...
+[2026-04-16 22:03:12] User query rows found: 0
+[2026-04-16 22:03:12] Error: No user account found
+[2026-04-16 22:03:12] === LOGIN ATTEMPT END ===
+
+[2026-04-16 22:03:20] === LOGIN ATTEMPT START ===
+[2026-04-16 22:03:20] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 22:03:20] Attempting login for: head@lookgoodframes.com
+[2026-04-16 22:03:20] Checking admin table...
+[2026-04-16 22:03:20] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 22:03:20] Admin query with 2 parameters
+[2026-04-16 22:03:20] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 22:03:20] Verifying admin password...
+[2026-04-16 22:03:20] Password valid: NO
+[2026-04-16 22:03:21] Checking users table...
+[2026-04-16 22:03:21] User query rows found: 0
+[2026-04-16 22:03:21] Error: No user account found
+[2026-04-16 22:03:21] === LOGIN ATTEMPT END ===
+
+[2026-04-16 22:05:13] === LOGIN ATTEMPT START ===
+[2026-04-16 22:05:13] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 22:05:13] Attempting login for: head@lookgoodframes.com
+[2026-04-16 22:05:13] Checking admin table...
+[2026-04-16 22:05:13] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 22:05:13] Admin query with 2 parameters
+[2026-04-16 22:05:13] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 22:05:13] Verifying admin password...
+[2026-04-16 22:05:13] Password valid: NO
+[2026-04-16 22:05:13] Checking users table...
+[2026-04-16 22:05:13] User query rows found: 0
+[2026-04-16 22:05:13] Error: No user account found
+[2026-04-16 22:05:13] === LOGIN ATTEMPT END ===
+
+[2026-04-16 22:08:53] === LOGIN ATTEMPT START ===
+[2026-04-16 22:08:53] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 22:08:53] Attempting login for: head@lookgoodframes.com
+[2026-04-16 22:08:53] Checking admin table...
+[2026-04-16 22:08:53] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 22:08:53] Admin query with 2 parameters
+[2026-04-16 22:08:53] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 22:08:53] Verifying admin password...
+[2026-04-16 22:08:53] Password valid: NO
+[2026-04-16 22:08:53] Checking users table...
+[2026-04-16 22:08:53] User query rows found: 0
+[2026-04-16 22:08:53] Error: No user account found
+[2026-04-16 22:08:53] === LOGIN ATTEMPT END ===
+
+[2026-04-16 22:09:10] === LOGIN ATTEMPT START ===
+[2026-04-16 22:09:10] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 22:09:10] Attempting login for: head@lookgoodframes.com
+[2026-04-16 22:09:10] Checking admin table...
+[2026-04-16 22:09:10] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 22:09:10] Admin query with 2 parameters
+[2026-04-16 22:09:10] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 22:09:10] Verifying admin password...
+[2026-04-16 22:09:10] Password valid: NO
+[2026-04-16 22:09:10] Checking users table...
+[2026-04-16 22:09:10] User query rows found: 0
+[2026-04-16 22:09:10] Error: No user account found
+[2026-04-16 22:09:10] === LOGIN ATTEMPT END ===
+
+[2026-04-16 22:19:36] === LOGIN ATTEMPT START ===
+[2026-04-16 22:19:36] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 22:19:36] Attempting login for: head@lookgoodframes.com
+[2026-04-16 22:19:36] Checking admin table...
+[2026-04-16 22:19:36] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 22:19:36] Admin query with 2 parameters
+[2026-04-16 22:19:36] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 22:19:36] Verifying admin password...
+[2026-04-16 22:19:36] Password valid: NO
+[2026-04-16 22:19:37] Checking users table...
+[2026-04-16 22:19:37] User query rows found: 0
+[2026-04-16 22:19:37] Error: No user account found
+[2026-04-16 22:19:37] === LOGIN ATTEMPT END ===
+
+[2026-04-16 22:25:33] === LOGIN ATTEMPT START ===
+[2026-04-16 22:25:33] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 22:25:33] Attempting login for: head@lookgoodframes.com
+[2026-04-16 22:25:33] Checking admin table...
+[2026-04-16 22:25:33] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 22:25:33] Admin query with 2 parameters
+[2026-04-16 22:25:33] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 22:25:33] Verifying admin password...
+[2026-04-16 22:25:33] Password valid: NO
+[2026-04-16 22:25:33] Checking users table...
+[2026-04-16 22:25:33] User query rows found: 0
+[2026-04-16 22:25:33] Error: No user account found
+[2026-04-16 22:25:33] === LOGIN ATTEMPT END ===
+
+[2026-04-16 22:25:42] === LOGIN ATTEMPT START ===
+[2026-04-16 22:25:42] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 22:25:42] Attempting login for: head@lookgoodframes.com
+[2026-04-16 22:25:42] Checking admin table...
+[2026-04-16 22:25:42] Admin table columns: admin_id, admin_name, email, password, position, picture
+[2026-04-16 22:25:42] Admin query with 2 parameters
+[2026-04-16 22:25:42] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 22:25:42] Verifying admin password...
+[2026-04-16 22:25:43] Password valid: NO
+[2026-04-16 22:25:43] Checking users table...
+[2026-04-16 22:25:43] User query rows found: 0
+[2026-04-16 22:25:43] Error: No user account found
+[2026-04-16 22:25:43] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:06:32] === LOGIN ATTEMPT START ===
+[2026-04-16 23:06:32] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 23:06:32] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:06:32] Checking admin table...
+[2026-04-16 23:06:32] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:06:32] Admin query with 2 parameters
+[2026-04-16 23:06:32] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:06:32] Verifying admin password...
+[2026-04-16 23:06:32] Password valid: NO
+[2026-04-16 23:06:32] Checking users table...
+[2026-04-16 23:06:32] User query rows found: 0
+[2026-04-16 23:06:32] Error: No user account found
+[2026-04-16 23:06:32] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:06:42] === LOGIN ATTEMPT START ===
+[2026-04-16 23:06:42] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 23:06:42] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:06:42] Checking admin table...
+[2026-04-16 23:06:42] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:06:42] Admin query with 2 parameters
+[2026-04-16 23:06:42] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:06:42] Verifying admin password...
+[2026-04-16 23:06:43] Password valid: NO
+[2026-04-16 23:06:43] Checking users table...
+[2026-04-16 23:06:43] User query rows found: 0
+[2026-04-16 23:06:43] Error: No user account found
+[2026-04-16 23:06:43] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:07:10] === LOGIN ATTEMPT START ===
+[2026-04-16 23:07:10] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => -- ============================================================ -- admin table + 3 seeded admins -- Matches screenshot schema: --   admin_id | admin_name | email | password | position -- ============================================================  CREATE TABLE IF NOT EXISTS `admin` (   `admin_id`   varchar(255) NOT NULL,   `admin_name` varchar(255) NOT NULL,   `email`      varchar(255) NOT NULL,   `password`   varchar(255) NOT NULL,   `position`   enum(                   'head',                   'inventory_orderAdmin',                   'message_feedbackAdmin'                ) NOT NULL DEFAULT 'inventory_orderAdmin',   PRIMARY KEY (`admin_id`),   UNIQUE KEY `uq_admin_email` (`email`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;  -- ============================================================ -- Seed: 3 admins (one per role) -- Passwords are bcrypt hashes of the plaintext shown below. -- Change these before going to production! -- --   Head Admin          →  password: HeadAdmin@2026 --   Inventory Admin     →  password: InvAdmin@2026 --   Msg/Feedback Admin  →  password: MsgAdmin@2026 -- ============================================================  INSERT INTO `admin`   (`admin_id`, `admin_name`, `email`, `password`, `position`) VALUES   (     'ADM-HEAD-001',     'Head Admin',     'head@lookgoodframes.com',     -- bcrypt hash of: HeadAdmin@2026     '$2y$12$gZ3x1VqKwPmLt8RvNsYdO.T5rUqWjXbHcAeI2nK9oMpFsLdGeYuQi',     'head'   ),   (     'ADM-INV-001',     'Inventory Admin',     'inventory@lookgoodframes.com',     -- bcrypt hash of: InvAdmin@2026     '$2y$12$hA4y2WrLxQnMu9SvOtZeP.U6sTrXkYcIdBfJ3oL0pNqGtMeHfZvRj',     'inventory_orderAdmin'   ),   (     'ADM-MSG-001',     'Messages Admin',     'messages@lookgoodframes.com',     -- bcrypt hash of: MsgAdmin@2026     '$2y$12$iB5z3XsMyRoNv0TwPuAfQ.V7tUsYlZdJeCgK4pM1qOrHuNfIgAwSk',     'message_feedbackAdmin'   ) ON DUPLICATE KEY UPDATE   `admin_name` = VALUES(`admin_name`),   `email`      = VALUES(`email`),   `position`   = VALUES(`position`);
+)
+
+[2026-04-16 23:07:10] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:07:10] Checking admin table...
+[2026-04-16 23:07:10] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:07:10] Admin query with 2 parameters
+[2026-04-16 23:07:10] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:07:10] Verifying admin password...
+[2026-04-16 23:07:10] Password valid: NO
+[2026-04-16 23:07:10] Checking users table...
+[2026-04-16 23:07:10] User query rows found: 0
+[2026-04-16 23:07:10] Error: No user account found
+[2026-04-16 23:07:10] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:07:41] === LOGIN ATTEMPT START ===
+[2026-04-16 23:07:41] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => $2y$12$gZ3x1VqKwPmLt8RvNsYdO.T5rUqWjXbHcAeI2nK9oMpFsLdGeYuQi
+)
+
+[2026-04-16 23:07:41] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:07:41] Checking admin table...
+[2026-04-16 23:07:41] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:07:41] Admin query with 2 parameters
+[2026-04-16 23:07:41] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:07:41] Verifying admin password...
+[2026-04-16 23:07:42] Password valid: NO
+[2026-04-16 23:07:42] Checking users table...
+[2026-04-16 23:07:42] User query rows found: 0
+[2026-04-16 23:07:42] Error: No user account found
+[2026-04-16 23:07:42] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:08:39] === LOGIN ATTEMPT START ===
+[2026-04-16 23:08:39] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 23:08:39] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:08:39] Checking admin table...
+[2026-04-16 23:08:39] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:08:39] Admin query with 2 parameters
+[2026-04-16 23:08:39] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:08:39] Verifying admin password...
+[2026-04-16 23:08:39] Password valid: NO
+[2026-04-16 23:08:39] Checking users table...
+[2026-04-16 23:08:39] User query rows found: 0
+[2026-04-16 23:08:39] Error: No user account found
+[2026-04-16 23:08:39] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:12:50] === LOGIN ATTEMPT START ===
+[2026-04-16 23:12:50] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 23:12:50] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:12:50] Checking admin table...
+[2026-04-16 23:12:50] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:12:50] Admin query with 2 parameters
+[2026-04-16 23:12:50] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:12:50] Verifying admin password...
+[2026-04-16 23:12:50] Password valid: NO
+[2026-04-16 23:12:50] Checking users table...
+[2026-04-16 23:12:50] User query rows found: 0
+[2026-04-16 23:12:50] Error: No user account found
+[2026-04-16 23:12:50] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:12:53] === LOGIN ATTEMPT START ===
+[2026-04-16 23:12:53] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 23:12:53] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:12:53] Checking admin table...
+[2026-04-16 23:12:53] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:12:53] Admin query with 2 parameters
+[2026-04-16 23:12:53] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:12:53] Verifying admin password...
+[2026-04-16 23:12:53] Password valid: NO
+[2026-04-16 23:12:54] Checking users table...
+[2026-04-16 23:12:54] User query rows found: 0
+[2026-04-16 23:12:54] Error: No user account found
+[2026-04-16 23:12:54] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:14:34] === LOGIN ATTEMPT START ===
+[2026-04-16 23:14:34] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 23:14:34] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:14:34] Checking admin table...
+[2026-04-16 23:14:34] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:14:34] Admin query with 2 parameters
+[2026-04-16 23:14:34] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:14:34] Verifying admin password...
+[2026-04-16 23:14:34] Password valid: NO
+[2026-04-16 23:14:34] Checking users table...
+[2026-04-16 23:14:34] User query rows found: 0
+[2026-04-16 23:14:34] Error: No user account found
+[2026-04-16 23:14:34] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:14:43] === LOGIN ATTEMPT START ===
+[2026-04-16 23:14:43] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 23:14:43] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:14:43] Checking admin table...
+[2026-04-16 23:14:43] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:14:43] Admin query with 2 parameters
+[2026-04-16 23:14:43] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:14:43] Verifying admin password...
+[2026-04-16 23:14:44] Password valid: NO
+[2026-04-16 23:14:44] Checking users table...
+[2026-04-16 23:14:44] User query rows found: 0
+[2026-04-16 23:14:44] Error: No user account found
+[2026-04-16 23:14:44] === LOGIN ATTEMPT END ===
+
+[2026-04-16 23:16:15] === LOGIN ATTEMPT START ===
+[2026-04-16 23:16:15] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-16 23:16:15] Attempting login for: head@lookgoodframes.com
+[2026-04-16 23:16:15] Checking admin table...
+[2026-04-16 23:16:15] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-16 23:16:15] Admin query with 2 parameters
+[2026-04-16 23:16:15] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-16 23:16:15] Verifying admin password...
+[2026-04-16 23:16:15] Password valid: NO
+[2026-04-16 23:16:16] Checking users table...
+[2026-04-16 23:16:16] User query rows found: 0
+[2026-04-16 23:16:16] Error: No user account found
+[2026-04-16 23:16:16] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:16:10] === LOGIN ATTEMPT START ===
+[2026-04-19 21:16:10] POST data: Array
+(
+)
+
+[2026-04-19 21:16:10] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:16:40] === LOGIN ATTEMPT START ===
+[2026-04-19 21:16:40] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-19 21:16:40] Attempting login for: head@lookgoodframes.com
+[2026-04-19 21:16:40] Checking admin table...
+[2026-04-19 21:16:40] Admin table columns: admin_id, admin_name, email, password, position
+[2026-04-19 21:16:40] Admin query with 2 parameters
+[2026-04-19 21:16:40] Admin query result: Found admin: head@lookgoodframes.com
+[2026-04-19 21:16:40] Verifying admin password...
+[2026-04-19 21:16:40] Password valid: NO
+[2026-04-19 21:16:40] Checking users table...
+[2026-04-19 21:16:40] User query rows found: 0
+[2026-04-19 21:16:40] Error: No user account found
+[2026-04-19 21:16:40] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:19:45] === LOGIN ATTEMPT START ===
+[2026-04-19 21:19:45] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-19 21:19:45] Attempting login for: head@lookgoodframes.com
+[2026-04-19 21:19:45] Checking admin table...
+[2026-04-19 21:19:45] Admin query result: Found: head@lookgoodframes.com
+[2026-04-19 21:19:45] Checking users table...
+[2026-04-19 21:19:45] User query rows found: 0
+[2026-04-19 21:19:45] Error: No user account found
+[2026-04-19 21:19:45] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:19:54] === LOGIN ATTEMPT START ===
+[2026-04-19 21:19:54] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-19 21:19:54] Attempting login for: head@lookgoodframes.com
+[2026-04-19 21:19:54] Checking admin table...
+[2026-04-19 21:19:54] Admin query result: Found: head@lookgoodframes.com
+[2026-04-19 21:19:55] Checking users table...
+[2026-04-19 21:19:55] User query rows found: 0
+[2026-04-19 21:19:55] Error: No user account found
+[2026-04-19 21:19:55] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:21:09] === LOGIN ATTEMPT START ===
+[2026-04-19 21:21:09] POST data: Array
+(
+)
+
+[2026-04-19 21:21:09] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:31:13] === LOGIN ATTEMPT START ===
+[2026-04-19 21:31:13] POST data: Array
+(
+)
+
+[2026-04-19 21:31:13] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:31:27] === LOGIN ATTEMPT START ===
+[2026-04-19 21:31:27] POST data: Array
+(
+)
+
+[2026-04-19 21:31:27] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:31:43] === LOGIN ATTEMPT START ===
+[2026-04-19 21:31:43] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-19 21:31:43] Attempting login for: head@lookgoodframes.com
+[2026-04-19 21:31:43] Checking admin table...
+[2026-04-19 21:31:43] Admin query result: Found: head@lookgoodframes.com
+[2026-04-19 21:31:43] ADMIN LOGIN SUCCESSFUL for: head@lookgoodframes.com
+[2026-04-19 21:31:43] lg_switch_session_scope('admin') called
+[2026-04-19 21:31:43] New session ID: cgl6hjj44f3m6p9h0823jqq272
+[2026-04-19 21:31:43] Session written. admin_id=ADM-HEAD-001 position=head
+[2026-04-19 21:31:43] Redirecting to admin dashboard
+[2026-04-19 21:35:45] === LOGIN ATTEMPT START ===
+[2026-04-19 21:35:45] POST data: Array
+(
+)
+
+[2026-04-19 21:35:45] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:35:45] === LOGIN ATTEMPT START ===
+[2026-04-19 21:35:45] POST data: Array
+(
+)
+
+[2026-04-19 21:35:45] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:35:47] === LOGIN ATTEMPT START ===
+[2026-04-19 21:35:47] POST data: Array
+(
+)
+
+[2026-04-19 21:35:47] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:35:56] === LOGIN ATTEMPT START ===
+[2026-04-19 21:35:56] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-19 21:35:56] Attempting login for: head@lookgoodframes.com
+[2026-04-19 21:35:56] Checking admin table...
+[2026-04-19 21:35:56] Admin query result: Found: head@lookgoodframes.com
+[2026-04-19 21:35:56] ADMIN LOGIN SUCCESSFUL for: head@lookgoodframes.com
+[2026-04-19 21:35:56] lg_switch_session_scope('admin') called
+[2026-04-19 21:35:56] New session ID: ipn3o4tnejq12tk77ifrp3a6kt
+[2026-04-19 21:35:56] Session written. admin_id=ADM-HEAD-001 position=head
+[2026-04-19 21:35:56] Redirecting to admin dashboard
+[2026-04-19 21:38:15] === LOGIN ATTEMPT START ===
+[2026-04-19 21:38:15] POST data: Array
+(
+)
+
+[2026-04-19 21:38:15] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:38:33] === LOGIN ATTEMPT START ===
+[2026-04-19 21:38:33] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-19 21:38:33] Attempting login for: head@lookgoodframes.com
+[2026-04-19 21:38:33] Checking admin table...
+[2026-04-19 21:38:33] Admin query result: Found: head@lookgoodframes.com
+[2026-04-19 21:38:33] ADMIN LOGIN SUCCESSFUL for: head@lookgoodframes.com
+[2026-04-19 21:38:33] lg_switch_session_scope('admin') called
+[2026-04-19 21:38:33] New session ID: 337c4rfs31rjf4do8afgdj05l9
+[2026-04-19 21:38:33] Session written. admin_id=ADM-HEAD-001 position=head
+[2026-04-19 21:38:33] Redirecting to admin dashboard
+[2026-04-19 21:39:04] === LOGIN ATTEMPT START ===
+[2026-04-19 21:39:04] POST data: Array
+(
+)
+
+[2026-04-19 21:39:04] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:39:21] === LOGIN ATTEMPT START ===
+[2026-04-19 21:39:21] POST data: Array
+(
+)
+
+[2026-04-19 21:39:21] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:47:22] === LOGIN ATTEMPT START ===
+[2026-04-19 21:47:22] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin123
+)
+
+[2026-04-19 21:47:22] Attempting login for: head@lookgoodframes.com
+[2026-04-19 21:47:22] Checking admin table...
+[2026-04-19 21:47:22] Admin query result: Found: head@lookgoodframes.com
+[2026-04-19 21:47:22] Checking users table...
+[2026-04-19 21:47:22] User query rows found: 0
+[2026-04-19 21:47:22] Error: No user account found
+[2026-04-19 21:47:22] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:47:34] === LOGIN ATTEMPT START ===
+[2026-04-19 21:47:34] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-19 21:47:34] Attempting login for: head@lookgoodframes.com
+[2026-04-19 21:47:34] Checking admin table...
+[2026-04-19 21:47:34] Admin query result: Found: head@lookgoodframes.com
+[2026-04-19 21:47:34] ADMIN LOGIN SUCCESSFUL for: head@lookgoodframes.com
+[2026-04-19 21:47:34] lg_switch_session_scope('admin') called
+[2026-04-19 21:47:34] New session ID: 6kadj1mjf2nkc1hqlbgn6ktaed
+[2026-04-19 21:47:34] Session written. admin_id=ADM-HEAD-001 position=head
+[2026-04-19 21:47:34] Redirecting to admin dashboard
+[2026-04-19 21:57:02] === LOGIN ATTEMPT START ===
+[2026-04-19 21:57:02] POST data: Array
+(
+)
+
+[2026-04-19 21:57:02] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:57:29] === LOGIN ATTEMPT START ===
+[2026-04-19 21:57:29] POST data: Array
+(
+    [emailOrUsername] => inventory@lookgoodframes.com
+    [password] => InvtAdmin@2026
+)
+
+[2026-04-19 21:57:29] Attempting login for: inventory@lookgoodframes.com
+[2026-04-19 21:57:29] Checking admin table...
+[2026-04-19 21:57:29] Admin query result: Found: inventory@lookgoodframes.com
+[2026-04-19 21:57:30] Checking users table...
+[2026-04-19 21:57:30] User query rows found: 0
+[2026-04-19 21:57:30] Error: No user account found
+[2026-04-19 21:57:30] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:57:56] === LOGIN ATTEMPT START ===
+[2026-04-19 21:57:56] POST data: Array
+(
+    [emailOrUsername] => inventory@lookgoodframes.com
+    [password] => InvAdmin@2026
+)
+
+[2026-04-19 21:57:56] Attempting login for: inventory@lookgoodframes.com
+[2026-04-19 21:57:56] Checking admin table...
+[2026-04-19 21:57:56] Admin query result: Found: inventory@lookgoodframes.com
+[2026-04-19 21:57:57] Checking users table...
+[2026-04-19 21:57:57] User query rows found: 0
+[2026-04-19 21:57:57] Error: No user account found
+[2026-04-19 21:57:57] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:58:09] === LOGIN ATTEMPT START ===
+[2026-04-19 21:58:09] POST data: Array
+(
+)
+
+[2026-04-19 21:58:09] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:59:10] === LOGIN ATTEMPT START ===
+[2026-04-19 21:59:10] POST data: Array
+(
+)
+
+[2026-04-19 21:59:10] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:59:17] === LOGIN ATTEMPT START ===
+[2026-04-19 21:59:17] POST data: Array
+(
+)
+
+[2026-04-19 21:59:17] === LOGIN ATTEMPT END ===
+
+[2026-04-19 21:59:32] === LOGIN ATTEMPT START ===
+[2026-04-19 21:59:32] POST data: Array
+(
+    [emailOrUsername] => inventory@lookgoodframes.com
+    [password] => InvAdmin@2026
+)
+
+[2026-04-19 21:59:32] Attempting login for: inventory@lookgoodframes.com
+[2026-04-19 21:59:32] Checking admin table...
+[2026-04-19 21:59:32] Admin query result: Found: inventory@lookgoodframes.com
+[2026-04-19 21:59:32] Checking users table...
+[2026-04-19 21:59:32] User query rows found: 0
+[2026-04-19 21:59:32] Error: No user account found
+[2026-04-19 21:59:32] === LOGIN ATTEMPT END ===
+
+[2026-04-19 22:00:30] === LOGIN ATTEMPT START ===
+[2026-04-19 22:00:30] POST data: Array
+(
+)
+
+[2026-04-19 22:00:30] === LOGIN ATTEMPT END ===
+
+[2026-04-19 22:01:12] === LOGIN ATTEMPT START ===
+[2026-04-19 22:01:12] POST data: Array
+(
+)
+
+[2026-04-19 22:01:12] === LOGIN ATTEMPT END ===
+
+[2026-04-19 22:01:54] === LOGIN ATTEMPT START ===
+[2026-04-19 22:01:54] POST data: Array
+(
+    [emailOrUsername] => inventory@lookgoodframes.com
+    [password] => InvAdmin@2026
+)
+
+[2026-04-19 22:01:54] Attempting login for: inventory@lookgoodframes.com
+[2026-04-19 22:01:54] Checking admin table...
+[2026-04-19 22:01:54] Admin query result: Found: inventory@lookgoodframes.com
+[2026-04-19 22:01:54] ADMIN LOGIN SUCCESSFUL for: inventory@lookgoodframes.com
+[2026-04-19 22:01:54] lg_switch_session_scope('admin') called
+[2026-04-19 22:01:54] New session ID: 7nm4v3ciib3r8tuctm8f9d8sv8
+[2026-04-19 22:01:54] Session written. admin_id=ADM-INV-001 position=inventory_orderAdmin
+[2026-04-19 22:01:54] Redirecting to admin dashboard
+[2026-04-19 22:03:14] === LOGIN ATTEMPT START ===
+[2026-04-19 22:03:14] POST data: Array
+(
+)
+
+[2026-04-19 22:03:14] === LOGIN ATTEMPT END ===
+
+[2026-04-19 22:03:36] === LOGIN ATTEMPT START ===
+[2026-04-19 22:03:36] POST data: Array
+(
+)
+
+[2026-04-19 22:03:36] === LOGIN ATTEMPT END ===
+
+[2026-04-19 22:05:02] === LOGIN ATTEMPT START ===
+[2026-04-19 22:05:02] POST data: Array
+(
+    [emailOrUsername] => messageAdmin@lookgoodframes.com
+    [password] => MsgAdmin2026
+)
+
+[2026-04-19 22:05:02] Attempting login for: messageAdmin@lookgoodframes.com
+[2026-04-19 22:05:02] Checking admin table...
+[2026-04-19 22:05:02] Admin query result: Not found
+[2026-04-19 22:05:02] Checking users table...
+[2026-04-19 22:05:02] User query rows found: 0
+[2026-04-19 22:05:02] Error: No user account found
+[2026-04-19 22:05:02] === LOGIN ATTEMPT END ===
+
+[2026-04-19 22:05:29] === LOGIN ATTEMPT START ===
+[2026-04-19 22:05:29] POST data: Array
+(
+    [emailOrUsername] => message@lookgoodframes.com
+    [password] => MsgAdmin@2026
+)
+
+[2026-04-19 22:05:29] Attempting login for: message@lookgoodframes.com
+[2026-04-19 22:05:29] Checking admin table...
+[2026-04-19 22:05:29] Admin query result: Not found
+[2026-04-19 22:05:29] Checking users table...
+[2026-04-19 22:05:29] User query rows found: 0
+[2026-04-19 22:05:29] Error: No user account found
+[2026-04-19 22:05:29] === LOGIN ATTEMPT END ===
+
+[2026-04-20 03:33:08] === LOGIN ATTEMPT START ===
+[2026-04-20 03:33:08] POST data: Array
+(
+)
+
+[2026-04-20 03:33:08] === LOGIN ATTEMPT END ===
+
+[2026-04-20 03:33:23] === LOGIN ATTEMPT START ===
+[2026-04-20 03:33:23] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-20 03:33:23] Attempting login for: head@lookgoodframes.com
+[2026-04-20 03:33:23] Checking admin table...
+[2026-04-20 03:33:23] Admin query result: Found: head@lookgoodframes.com
+[2026-04-20 03:33:24] ADMIN LOGIN SUCCESSFUL for: head@lookgoodframes.com
+[2026-04-20 03:33:24] lg_switch_session_scope('admin') called
+[2026-04-20 03:33:24] New session ID: 5hhmu71fp3phie0kmhca8ne39j
+[2026-04-20 03:33:24] Session written. admin_id=ADM-HEAD-001 position=head
+[2026-04-20 03:33:24] Redirecting to admin dashboard
+[2026-04-20 03:33:40] === LOGIN ATTEMPT START ===
+[2026-04-20 03:33:40] POST data: Array
+(
+)
+
+[2026-04-20 03:33:40] === LOGIN ATTEMPT END ===
+
+[2026-04-20 03:53:52] === LOGIN ATTEMPT START ===
+[2026-04-20 03:53:52] POST data: Array
+(
+    [emailOrUsername] => edrianhalili@gmail.com
+    [password] => 111111
+)
+
+[2026-04-20 03:53:52] Attempting login for: edrianhalili@gmail.com
+[2026-04-20 03:53:52] Checking admin table...
+[2026-04-20 03:53:52] Admin query result: Not found
+[2026-04-20 03:53:52] Checking users table...
+[2026-04-20 03:53:52] User query rows found: 1
+[2026-04-20 03:53:52] User found: edrianhalili@gmail.com, Role: user
+[2026-04-20 03:53:52] USER LOGIN SUCCESSFUL for: edrianhalili@gmail.com
+[2026-04-20 03:53:52] lg_switch_session_scope('user') called
+[2026-04-20 03:53:52] New session ID: dc5jl0q7c51h77m9l18njbpt7g
+[2026-04-20 03:53:52] Redirecting to homepage
+[2026-04-20 04:07:04] === LOGIN ATTEMPT START ===
+[2026-04-20 04:07:04] POST data: Array
+(
+)
+
+[2026-04-20 04:07:04] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:07:08] === LOGIN ATTEMPT START ===
+[2026-04-20 04:07:08] POST data: Array
+(
+    [emailOrUsername] => edrianhalili@gmail.com
+    [password] => 111111
+)
+
+[2026-04-20 04:07:08] Attempting login for: edrianhalili@gmail.com
+[2026-04-20 04:07:08] Checking admin table...
+[2026-04-20 04:07:08] Admin query result: Not found
+[2026-04-20 04:07:08] Checking users table...
+[2026-04-20 04:07:08] User query rows found: 1
+[2026-04-20 04:07:08] User found: edrianhalili@gmail.com, Role: user
+[2026-04-20 04:07:08] USER LOGIN SUCCESSFUL for: edrianhalili@gmail.com
+[2026-04-20 04:07:08] lg_switch_session_scope('user') called
+[2026-04-20 04:07:08] New session ID: kiphgiai0tg73tode92p8lqv34
+[2026-04-20 04:07:08] Redirecting to homepage
+[2026-04-20 04:08:05] === LOGIN ATTEMPT START ===
+[2026-04-20 04:08:05] POST data: Array
+(
+)
+
+[2026-04-20 04:08:05] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:08:09] === LOGIN ATTEMPT START ===
+[2026-04-20 04:08:09] POST data: Array
+(
+    [emailOrUsername] => edrianhalili@gmail.com
+    [password] => 111111
+)
+
+[2026-04-20 04:08:09] Attempting login for: edrianhalili@gmail.com
+[2026-04-20 04:08:09] Checking admin table...
+[2026-04-20 04:08:09] Admin query result: Not found
+[2026-04-20 04:08:09] Checking users table...
+[2026-04-20 04:08:09] User query rows found: 1
+[2026-04-20 04:08:09] User found: edrianhalili@gmail.com, Role: user
+[2026-04-20 04:08:09] USER LOGIN SUCCESSFUL for: edrianhalili@gmail.com
+[2026-04-20 04:08:09] lg_switch_session_scope('user') called
+[2026-04-20 04:08:09] New session ID: eh75fg8aqc8l13im3q5orfhoec
+[2026-04-20 04:08:09] Redirecting to homepage
+[2026-04-20 04:10:27] === LOGIN ATTEMPT START ===
+[2026-04-20 04:10:27] POST data: Array
+(
+)
+
+[2026-04-20 04:10:27] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:10:37] === LOGIN ATTEMPT START ===
+[2026-04-20 04:10:37] POST data: Array
+(
+    [emailOrUsername] => inventory@lookgoodframes.com
+    [password] => InvAdmin@2026
+)
+
+[2026-04-20 04:10:37] Attempting login for: inventory@lookgoodframes.com
+[2026-04-20 04:10:37] Checking admin table...
+[2026-04-20 04:10:37] Admin query result: Found: inventory@lookgoodframes.com
+[2026-04-20 04:10:37] ADMIN LOGIN SUCCESSFUL for: inventory@lookgoodframes.com
+[2026-04-20 04:10:37] lg_switch_session_scope('admin') called
+[2026-04-20 04:10:37] New session ID: mc8nv89td3pg324dtgp1cv0pg2
+[2026-04-20 04:10:37] Session written. admin_id=ADM-INV-001 position=inventory_orderAdmin
+[2026-04-20 04:10:37] Redirecting to admin dashboard
+[2026-04-20 04:10:46] === LOGIN ATTEMPT START ===
+[2026-04-20 04:10:46] POST data: Array
+(
+)
+
+[2026-04-20 04:10:46] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:13:15] === LOGIN ATTEMPT START ===
+[2026-04-20 04:13:15] POST data: Array
+(
+    [emailOrUsername] => message@lookgoodframes.com
+    [password] => MsgAdmin@2026
+)
+
+[2026-04-20 04:13:15] Attempting login for: message@lookgoodframes.com
+[2026-04-20 04:13:15] Checking admin table...
+[2026-04-20 04:13:15] Admin query result: Not found
+[2026-04-20 04:13:15] Checking users table...
+[2026-04-20 04:13:15] User query rows found: 0
+[2026-04-20 04:13:15] Error: No user account found
+[2026-04-20 04:13:15] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:17:46] === LOGIN ATTEMPT START ===
+[2026-04-20 04:17:46] POST data: Array
+(
+)
+
+[2026-04-20 04:17:46] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:17:56] === LOGIN ATTEMPT START ===
+[2026-04-20 04:17:56] POST data: Array
+(
+    [emailOrUsername] => message@lookgoodframes.com
+    [password] => MsgAdmin@2026
+)
+
+[2026-04-20 04:17:56] Attempting login for: message@lookgoodframes.com
+[2026-04-20 04:17:56] Checking admin table...
+[2026-04-20 04:17:56] Admin query result: Not found
+[2026-04-20 04:17:56] Checking users table...
+[2026-04-20 04:17:56] User query rows found: 0
+[2026-04-20 04:17:56] Error: No user account found
+[2026-04-20 04:17:56] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:18:01] === LOGIN ATTEMPT START ===
+[2026-04-20 04:18:01] POST data: Array
+(
+)
+
+[2026-04-20 04:18:01] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:49:19] === LOGIN ATTEMPT START ===
+[2026-04-20 04:49:19] POST data: Array
+(
+    [emailOrUsername] => messages@lookgoodframes.com
+    [password] => MsgAdmin@2026
+    [remember] => on
+)
+
+[2026-04-20 04:49:19] Attempting login for: messages@lookgoodframes.com
+[2026-04-20 04:49:19] Checking admin table...
+[2026-04-20 04:49:19] Admin query result: Found: messages@lookgoodframes.com
+[2026-04-20 04:49:19] ADMIN LOGIN SUCCESSFUL for: messages@lookgoodframes.com
+[2026-04-20 04:49:19] lg_switch_session_scope('admin') called
+[2026-04-20 04:49:19] New session ID: ka849vldhtc1q1uaqtj1emv8ah
+[2026-04-20 04:49:19] Session written. admin_id=ADM-MSG-001 position=message_feedbackAdmin
+[2026-04-20 04:49:19] Redirecting to admin dashboard
+[2026-04-20 04:49:35] === LOGIN ATTEMPT START ===
+[2026-04-20 04:49:35] POST data: Array
+(
+)
+
+[2026-04-20 04:49:35] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:49:40] === LOGIN ATTEMPT START ===
+[2026-04-20 04:49:40] POST data: Array
+(
+    [emailOrUsername] => edrianhalili@gmail.com
+    [password] => 111111
+)
+
+[2026-04-20 04:49:40] Attempting login for: edrianhalili@gmail.com
+[2026-04-20 04:49:40] Checking admin table...
+[2026-04-20 04:49:40] Admin query result: Not found
+[2026-04-20 04:49:40] Checking users table...
+[2026-04-20 04:49:40] User query rows found: 1
+[2026-04-20 04:49:40] User found: edrianhalili@gmail.com, Role: user
+[2026-04-20 04:49:40] USER LOGIN SUCCESSFUL for: edrianhalili@gmail.com
+[2026-04-20 04:49:40] lg_switch_session_scope('user') called
+[2026-04-20 04:49:40] New session ID: faljoer5ufiotaa1p26dkstail
+[2026-04-20 04:49:40] Redirecting to homepage
+[2026-04-20 04:54:01] === LOGIN ATTEMPT START ===
+[2026-04-20 04:54:01] POST data: Array
+(
+)
+
+[2026-04-20 04:54:01] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:54:18] === LOGIN ATTEMPT START ===
+[2026-04-20 04:54:18] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-20 04:54:18] Attempting login for: head@lookgoodframes.com
+[2026-04-20 04:54:18] Checking admin table...
+[2026-04-20 04:54:18] Admin query result: Found: head@lookgoodframes.com
+[2026-04-20 04:54:18] ADMIN LOGIN SUCCESSFUL for: head@lookgoodframes.com
+[2026-04-20 04:54:18] lg_switch_session_scope('admin') called
+[2026-04-20 04:54:18] New session ID: fleifg8efa408hvt747dso7379
+[2026-04-20 04:54:18] Session written. admin_id=ADM-HEAD-001 position=head
+[2026-04-20 04:54:18] Redirecting to admin dashboard
+[2026-04-20 04:59:54] === LOGIN ATTEMPT START ===
+[2026-04-20 04:59:54] POST data: Array
+(
+)
+
+[2026-04-20 04:59:54] === LOGIN ATTEMPT END ===
+
+[2026-04-20 04:59:59] === LOGIN ATTEMPT START ===
+[2026-04-20 04:59:59] POST data: Array
+(
+    [emailOrUsername] => edrianhalili@gmail.com
+    [password] => 111111
+)
+
+[2026-04-20 04:59:59] Attempting login for: edrianhalili@gmail.com
+[2026-04-20 04:59:59] Checking admin table...
+[2026-04-20 04:59:59] Admin query result: Not found
+[2026-04-20 04:59:59] Checking users table...
+[2026-04-20 04:59:59] User query rows found: 1
+[2026-04-20 04:59:59] User found: edrianhalili@gmail.com, Role: user
+[2026-04-20 04:59:59] USER LOGIN SUCCESSFUL for: edrianhalili@gmail.com
+[2026-04-20 04:59:59] lg_switch_session_scope('user') called
+[2026-04-20 04:59:59] New session ID: 91shlu6cdnvf3s1rnrieu9eubo
+[2026-04-20 04:59:59] Redirecting to homepage
+[2026-04-20 05:32:07] === LOGIN ATTEMPT START ===
+[2026-04-20 05:32:07] POST data: Array
+(
+)
+
+[2026-04-20 05:32:07] === LOGIN ATTEMPT END ===
+
+[2026-04-20 05:32:17] === LOGIN ATTEMPT START ===
+[2026-04-20 05:32:17] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-20 05:32:17] Attempting login for: head@lookgoodframes.com
+[2026-04-20 05:32:17] Checking admin table...
+[2026-04-20 05:32:17] Admin query result: Found: head@lookgoodframes.com
+[2026-04-20 05:32:17] ADMIN LOGIN SUCCESSFUL for: head@lookgoodframes.com
+[2026-04-20 05:32:17] lg_switch_session_scope('admin') called
+[2026-04-20 05:32:17] New session ID: mj80p8o0q02o3d28e9n0g7iegk
+[2026-04-20 05:32:17] Session written. admin_id=ADM-HEAD-001 position=head
+[2026-04-20 05:32:17] Redirecting to admin dashboard
+[2026-04-20 05:34:01] === LOGIN ATTEMPT START ===
+[2026-04-20 05:34:01] POST data: Array
+(
+)
+
+[2026-04-20 05:34:01] === LOGIN ATTEMPT END ===
+
+[2026-04-20 05:34:14] === LOGIN ATTEMPT START ===
+[2026-04-20 05:34:14] POST data: Array
+(
+    [emailOrUsername] => messages@lookgoodframes.com
+    [password] => MsgAdmin@2026
+)
+
+[2026-04-20 05:34:14] Attempting login for: messages@lookgoodframes.com
+[2026-04-20 05:34:14] Checking admin table...
+[2026-04-20 05:34:14] Admin query result: Found: messages@lookgoodframes.com
+[2026-04-20 05:34:14] ADMIN LOGIN SUCCESSFUL for: messages@lookgoodframes.com
+[2026-04-20 05:34:14] lg_switch_session_scope('admin') called
+[2026-04-20 05:34:14] New session ID: rf304t34gr7d46q5saj11am80u
+[2026-04-20 05:34:14] Session written. admin_id=ADM-MSG-001 position=message_feedbackAdmin
+[2026-04-20 05:34:14] Redirecting to admin dashboard
+[2026-04-20 05:35:18] === LOGIN ATTEMPT START ===
+[2026-04-20 05:35:18] POST data: Array
+(
+)
+
+[2026-04-20 05:35:18] === LOGIN ATTEMPT END ===
+
+[2026-04-20 05:35:31] === LOGIN ATTEMPT START ===
+[2026-04-20 05:35:31] POST data: Array
+(
+    [emailOrUsername] => inventory@lookgoodframes.com
+    [password] => InvAdmin@2026
+)
+
+[2026-04-20 05:35:31] Attempting login for: inventory@lookgoodframes.com
+[2026-04-20 05:35:31] Checking admin table...
+[2026-04-20 05:35:31] Admin query result: Found: inventory@lookgoodframes.com
+[2026-04-20 05:35:31] ADMIN LOGIN SUCCESSFUL for: inventory@lookgoodframes.com
+[2026-04-20 05:35:31] lg_switch_session_scope('admin') called
+[2026-04-20 05:35:31] New session ID: i18v2nmpbmkmb3kf6jske481ic
+[2026-04-20 05:35:31] Session written. admin_id=ADM-INV-001 position=inventory_orderAdmin
+[2026-04-20 05:35:31] Redirecting to admin dashboard
+[2026-04-20 05:37:32] === LOGIN ATTEMPT START ===
+[2026-04-20 05:37:32] POST data: Array
+(
+)
+
+[2026-04-20 05:37:32] === LOGIN ATTEMPT END ===
+
+[2026-04-20 06:56:55] === LOGIN ATTEMPT START ===
+[2026-04-20 06:56:55] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-20 06:56:55] Attempting login for: head@lookgoodframes.com
+[2026-04-20 06:56:55] Checking admin table...
+[2026-04-20 06:56:55] Admin query result: Found: head@lookgoodframes.com
+[2026-04-20 06:56:55] ADMIN LOGIN SUCCESSFUL for: head@lookgoodframes.com
+[2026-04-20 06:56:55] lg_switch_session_scope('admin') called
+[2026-04-20 06:56:55] New session ID: j6c0fgircgmlrhbvbrc71imh3d
+[2026-04-20 06:56:55] Session written. admin_id=ADM-HEAD-001 position=head
+[2026-04-20 06:56:55] Redirecting to admin dashboard
+[2026-04-20 06:57:03] === LOGIN ATTEMPT START ===
+[2026-04-20 06:57:03] POST data: Array
+(
+)
+
+[2026-04-20 06:57:03] === LOGIN ATTEMPT END ===
+
+[2026-04-20 06:57:16] === LOGIN ATTEMPT START ===
+[2026-04-20 06:57:16] POST data: Array
+(
+    [emailOrUsername] => inventory@lookgoodframes.com
+    [password] => InvAdmin@2026
+)
+
+[2026-04-20 06:57:16] Attempting login for: inventory@lookgoodframes.com
+[2026-04-20 06:57:16] Checking admin table...
+[2026-04-20 06:57:16] Admin query result: Found: inventory@lookgoodframes.com
+[2026-04-20 06:57:16] ADMIN LOGIN SUCCESSFUL for: inventory@lookgoodframes.com
+[2026-04-20 06:57:16] lg_switch_session_scope('admin') called
+[2026-04-20 06:57:16] New session ID: h5t9d8ji8f5j83v0k88i9hr8vu
+[2026-04-20 06:57:16] Session written. admin_id=ADM-INV-001 position=inventory_orderAdmin
+[2026-04-20 06:57:16] Redirecting to admin dashboard
+[2026-04-20 06:57:37] === LOGIN ATTEMPT START ===
+[2026-04-20 06:57:37] POST data: Array
+(
+)
+
+[2026-04-20 06:57:37] === LOGIN ATTEMPT END ===
+
+[2026-04-20 06:57:53] === LOGIN ATTEMPT START ===
+[2026-04-20 06:57:53] POST data: Array
+(
+    [emailOrUsername] => messages@lookgoodframes.com
+    [password] => MsgAdmin@2026
+)
+
+[2026-04-20 06:57:53] Attempting login for: messages@lookgoodframes.com
+[2026-04-20 06:57:53] Checking admin table...
+[2026-04-20 06:57:53] Admin query result: Found: messages@lookgoodframes.com
+[2026-04-20 06:57:53] ADMIN LOGIN SUCCESSFUL for: messages@lookgoodframes.com
+[2026-04-20 06:57:53] lg_switch_session_scope('admin') called
+[2026-04-20 06:57:53] New session ID: 8l4gqktbo49di2q90icnpm63de
+[2026-04-20 06:57:53] Session written. admin_id=ADM-MSG-001 position=message_feedbackAdmin
+[2026-04-20 06:57:53] Redirecting to admin dashboard
+[2026-04-20 06:58:21] === LOGIN ATTEMPT START ===
+[2026-04-20 06:58:21] POST data: Array
+(
+)
+
+[2026-04-20 06:58:21] === LOGIN ATTEMPT END ===
+
+[2026-04-20 06:58:40] === LOGIN ATTEMPT START ===
+[2026-04-20 06:58:40] POST data: Array
+(
+    [emailOrUsername] => head@lookgoodframes.com
+    [password] => HeadAdmin@2026
+)
+
+[2026-04-20 06:58:40] Attempting login for: head@lookgoodframes.com
+[2026-04-20 06:58:40] Checking admin table...
+[2026-04-20 06:58:40] Admin query result: Found: head@lookgoodframes.com
+[2026-04-20 06:58:40] ADMIN LOGIN SUCCESSFUL for: head@lookgoodframes.com
+[2026-04-20 06:58:40] lg_switch_session_scope('admin') called
+[2026-04-20 06:58:40] New session ID: fbn4iiq3omg0686o8lk3ijl3dh
+[2026-04-20 06:58:40] Session written. admin_id=ADM-HEAD-001 position=head
+[2026-04-20 06:58:40] Redirecting to admin dashboard
+[2026-04-20 06:59:46] === LOGIN ATTEMPT START ===
+[2026-04-20 06:59:46] POST data: Array
+(
+)
+
+[2026-04-20 06:59:46] === LOGIN ATTEMPT END ===
+
+[2026-04-20 06:59:51] === LOGIN ATTEMPT START ===
+[2026-04-20 06:59:51] POST data: Array
+(
+    [emailOrUsername] => edrianhalili@gmail.com
+    [password] => 111111
+)
+
+[2026-04-20 06:59:51] Attempting login for: edrianhalili@gmail.com
+[2026-04-20 06:59:51] Checking admin table...
+[2026-04-20 06:59:51] Admin query result: Not found
+[2026-04-20 06:59:51] Checking users table...
+[2026-04-20 06:59:51] User query rows found: 1
+[2026-04-20 06:59:51] User found: edrianhalili@gmail.com, Role: user
+[2026-04-20 06:59:51] USER LOGIN SUCCESSFUL for: edrianhalili@gmail.com
+[2026-04-20 06:59:51] lg_switch_session_scope('user') called
+[2026-04-20 06:59:51] New session ID: 4bo180qngog8kg3ibe583li6rg
+[2026-04-20 06:59:51] Redirecting to homepage

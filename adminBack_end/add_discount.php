@@ -3,18 +3,24 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../auth_admin.php';
 requireAdmin();
 
+$_pos = $_SESSION['position'] ?? '';
+if ($_pos !== 'head' && $_pos !== 'inventory_orderAdmin') {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: insufficient permissions']);
+    exit();
+}
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     mysqli_report(MYSQLI_REPORT_OFF);
 
-    // ✅ FIX 3: all keys now match what FormData actually sends
     $discountCode    = trim($_POST['discountCode']        ?? '');
     $typeInput       = trim($_POST['discountType']        ?? '');
     $desc            = trim($_POST['discountDescription'] ?? '');
     $discountValue   = (float)($_POST['discountValue']    ?? 0);
     $minPurchase     = (float)($_POST['discountMinPurchase'] ?? 0);
 
-    // ✅ FIX 4: maxAmount may arrive as empty string when JS sends null
     $rawMax          = $_POST['discountMaxAmount'] ?? '';
     $maxDiscount     = ($rawMax !== '') ? (float)$rawMax : null;
 
@@ -57,8 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $conn->prepare(
         "INSERT INTO discount
             (discountCode, carts, description, discountValue,
-             minPurchase, maxDiscount, discountCategory,
-             startDate, endDate, totalUsageLimit, UsagePerUser)
+            minPurchase, maxDiscount, discountCategory,
+            startDate, endDate, totalUsageLimit, UsagePerUser)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
 

@@ -8,52 +8,9 @@
         const PRODUCTS_API_DETAIL = '../../userBack_end/productsAPI.php';
 
         const REVIEWS_DATA = {
-          'LGF-U-001-26': {
-            avg: 4.8, count: 143,
-            breakdown: { 5: 98, 4: 30, 3: 10, 2: 3, 1: 2 },
-            reviews: [
-              {
-                name: 'Marcus T.', date: 'March 12, 2025', rating: 5, text: 'Absolutely love these frames. The gold and black combo goes with literally everything — dressed up or casual. Build quality is solid and they sit comfortably all day.', verified: true, color: '#2c6fad',
-                response: { date: 'March 14, 2025', text: 'Thank you so much, Marcus! The Midnight Maverick is one of our bestsellers for exactly that reason — it just works with everything. We\'re thrilled it\'s a great fit for you!' }
-              },
-              { name: 'Jessa R.', date: 'February 28, 2025', rating: 5, text: 'Bought these for my partner and he literally hasn\'t taken them off. Looks amazing on him. The stainless steel is lightweight but sturdy — exactly what we were looking for.', verified: true, color: '#a0522d' },
-              {
-                name: 'Paolo V.', date: 'February 10, 2025', rating: 4, text: 'Great frames overall. The finish is premium and they look exactly like the photos. Knocked off one star only because delivery took a bit longer than expected, but the product itself is perfect.', verified: true, color: '#1a7a4a',
-                response: { date: 'February 12, 2025', text: 'Hi Paolo! We appreciate your patience and honest feedback. We\'re working on improving our delivery timelines. Glad you love the frames themselves!' }
-              },
-            ]
-          },
-          'unisex-1': {
-            avg: 4.8, count: 143,
-            breakdown: { 5: 98, 4: 30, 3: 10, 2: 3, 1: 2 },
-            reviews: [
-              {
-                name: 'Marcus T.', date: 'March 12, 2025', rating: 5, text: 'Absolutely love these frames. The gold and black combo goes with literally everything — dressed up or casual. Build quality is solid and they sit comfortably all day.', verified: true, color: '#2c6fad',
-                response: { date: 'March 14, 2025', text: 'Thank you so much, Marcus! The Midnight Maverick is one of our bestsellers for exactly that reason — it just works with everything. We\'re thrilled it\'s a great fit for you!' }
-              },
-              { name: 'Jessa R.', date: 'February 28, 2025', rating: 5, text: 'Bought these for my partner and he literally hasn\'t taken them off. Looks amazing on him. The stainless steel is lightweight but sturdy — exactly what we were looking for.', verified: true, color: '#a0522d' },
-              {
-                name: 'Paolo V.', date: 'February 10, 2025', rating: 4, text: 'Great frames overall. The finish is premium and they look exactly like the photos. Knocked off one star only because delivery took a bit longer than expected, but the product itself is perfect.', verified: true, color: '#1a7a4a',
-                response: { date: 'February 12, 2025', text: 'Hi Paolo! We appreciate your patience and honest feedback. We\'re working on improving our delivery timelines. Glad you love the frames themselves!' }
-              },
-            ]
-          },
-          'default': {
-            avg: 4.6, count: 87,
-            breakdown: { 5: 55, 4: 20, 3: 8, 2: 3, 1: 1 },
-            reviews: [
-              {
-                name: 'Andrea C.', date: 'March 20, 2025', rating: 5, text: 'These are stunning in person. The photos don\'t do them justice — the detail and finish are incredible. I get compliments every time I wear them. Worth every peso!', verified: true, color: '#7b2d8b',
-                response: { date: 'March 22, 2025', text: 'That\'s the best thing to hear, Andrea! We put a lot of care into the craftsmanship of every pair. Thank you for choosing LookGood!' }
-              },
-              { name: 'Ryan M.', date: 'March 5, 2025', rating: 4, text: 'Very good quality for the price. Fit is comfortable and the design is exactly what I was going for. Would definitely recommend to anyone looking for stylish frames at a reasonable price point.', verified: true, color: '#2c6fad' },
-              {
-                name: 'Sofia L.', date: 'February 18, 2025', rating: 5, text: 'I was hesitant to order eyewear online but LookGood made it so easy. The frames arrived quickly, packaged beautifully, and they fit perfectly. Already planning my next pair!', verified: true, color: '#c0392b',
-                response: { date: 'February 20, 2025', text: 'We\'re so glad you took the leap, Sofia! We always want to make the online shopping experience feel as trustworthy as visiting us in-store. Can\'t wait to help you pick your next pair!' }
-              },
-            ]
-          }
+          reviews: []
         };
+
 
         function resolveReviewKey(productId, category) {
           if (REVIEWS_DATA[productId]) return productId;
@@ -269,11 +226,43 @@
           }).join('');
         }
 
-        function loadReviews(productId, category) {
-          const data = REVIEWS_DATA[resolveReviewKey(productId, category)] || REVIEWS_DATA['default'];
-          document.getElementById('reviewsAvgScore').textContent = data.avg.toFixed(1);
+        // FIX: Load real reviews from DB, fall back to static data if none exist
+        let _cachedReviews = null;
+
+        async function loadReviews(productId, category) {
+          const grid        = document.getElementById('reviewsGrid');
+          const loadMoreBtn = document.getElementById('loadMoreReviews');
+
+          // Show loading state
+          grid.innerHTML = '<p style="color:#999;padding:1rem;"><i class="fas fa-spinner fa-spin"></i> Loading reviews…</p>';
+          loadMoreBtn.style.display = 'none';
+
+          let data = null;
+          try {
+            const apiBase = '../../userBack_end/productFeedbackAPI.php';
+            const res = await fetch(`${apiBase}?product_id=${encodeURIComponent(productId)}`);
+            if (res.ok) {
+              const json = await res.json();
+              // Only use DB data if there are actual reviews
+              if (json && json.count > 0) {
+                data = json;
+              }
+            }
+          } catch(e) {
+            console.warn('Could not load reviews from DB:', e);
+          }
+
+          // Fall back to static data if no DB reviews yet
+          if (!data) {
+            data = REVIEWS_DATA[resolveReviewKey(productId, category)] || REVIEWS_DATA['default'];
+          }
+
+          _cachedReviews = data;
+
+          document.getElementById('reviewsAvgScore').textContent = data.avg > 0 ? data.avg.toFixed(1) : '—';
           document.getElementById('reviewsStars').innerHTML = starsHTML(data.avg, 16);
-          document.getElementById('reviewsCountLabel').textContent = `Based on ${data.count} reviews`;
+          document.getElementById('reviewsCountLabel').textContent = `Based on ${data.count} review${data.count !== 1 ? 's' : ''}`;
+
           const total = Object.values(data.breakdown).reduce((a, b) => a + b, 0);
           const breakdownEl = document.getElementById('ratingBreakdown');
           breakdownEl.innerHTML = [5, 4, 3, 2, 1].map(star => {
@@ -281,12 +270,19 @@
             const pct = total > 0 ? Math.round((count / total) * 100) : 0;
             return `<div class="rating-bar-row"><span class="rating-bar-label">${star} <i class="fas fa-star"></i></span><div class="rating-bar-track"><div class="rating-bar-fill" style="width: ${pct}%"></div></div><span class="rating-bar-count">${count}</span></div>`;
           }).join('');
+
+          reviewsVisible = 3;
           renderReviewCards(data.reviews, 0, reviewsVisible);
-          const loadMoreBtn = document.getElementById('loadMoreReviews');
-          if (data.reviews.length <= reviewsVisible) loadMoreBtn.style.display = 'none';
-          else {
+
+          if (data.reviews.length <= reviewsVisible) {
+            loadMoreBtn.style.display = 'none';
+          } else {
             loadMoreBtn.style.display = '';
-            loadMoreBtn.onclick = () => { reviewsVisible += 3; renderReviewCards(data.reviews, 0, reviewsVisible); if (reviewsVisible >= data.reviews.length) loadMoreBtn.style.display = 'none'; };
+            loadMoreBtn.onclick = () => {
+              reviewsVisible += 3;
+              renderReviewCards(data.reviews, 0, reviewsVisible);
+              if (reviewsVisible >= data.reviews.length) loadMoreBtn.style.display = 'none';
+            };
           }
         }
 

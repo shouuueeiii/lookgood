@@ -727,6 +727,33 @@ let bnSelected    = true;
 /* ===================================================================
    LOAD
    =================================================================== */
+async function fetchStockForItems(items) {
+    // Fetch real stock values from the DB for all items in the cart
+    const ids = items.map(i => i.id).filter(Boolean);
+    if (!ids.length) return;
+    try {
+        const promises = ids.map(id =>
+            fetch(`../../userBack_end/productsAPI.php?id=${encodeURIComponent(id)}`)
+                .then(r => r.ok ? r.json() : null)
+                .catch(() => null)
+        );
+        const results = await Promise.all(promises);
+        results.forEach(product => {
+            if (!product || !product.id) return;
+            // Update stock on buyNowItem
+            if (buyNowItem && buyNowItem.id === product.id) {
+                buyNowItem.stock = product.stock;
+            }
+            // Update stock on cartItems
+            cartItems.forEach(item => {
+                if (item.id === product.id) item.stock = product.stock;
+            });
+        });
+    } catch(e) {
+        console.warn('Could not refresh stock:', e);
+    }
+}
+
 async function loadData() {
     await loadVouchers();   // ← fetch from DB first
 
@@ -749,6 +776,11 @@ async function loadData() {
             localStorage.setItem('lookgood_cart',   JSON.stringify(cartItems));
         }
     }
+
+    // FIX: Fetch real stock values from DB before rendering
+    const allItems = [...cartItems, ...(buyNowItem ? [buyNowItem] : [])];
+    await fetchStockForItems(allItems);
+
     renderCart();
 }
 
@@ -762,7 +794,7 @@ function renderCart() {
 
     if (buyNowItem) {
         buyNowDiv.style.display = 'grid';
-        const STOCK = 10;
+        const STOCK = (buyNowItem.stock !== undefined && buyNowItem.stock !== null) ? Number(buyNowItem.stock) : 999;
         const qty   = buyNowItem.quantity || 1;
         const outOfStock = STOCK === 0;
         const exceeds    = qty > STOCK;
@@ -799,7 +831,7 @@ function renderCart() {
 
     if (hasItems) {
         cartContainer.innerHTML = cartItems.map((item, idx) => {
-            const STOCK = 10;
+            const STOCK = (item.stock !== undefined && item.stock !== null) ? Number(item.stock) : 999;
             const outOfStock = STOCK === 0;
             const exceeds    = item.quantity > STOCK;
             const badge = (outOfStock || exceeds)
@@ -1010,18 +1042,48 @@ function applyVoucher() {
     const code  = voucherCodeInput.value.trim().toUpperCase();
     if (!code)  { shake(voucherCodeInput); return; }
     const found = VALID_VOUCHERS.find(v => v.code === code);
-    if (!found) {
+
+    function showVoucherError(msg) {
         shake(voucherCodeInput);
         voucherCodeInput.value = '';
-        voucherCodeInput.placeholder = 'Invalid code – try again';
-        setTimeout(() => voucherCodeInput.placeholder = 'Voucher code…', 2500);
+        voucherCodeInput.placeholder = msg;
+        setTimeout(() => voucherCodeInput.placeholder = 'Voucher code…', 3000);
+    }
+
+    if (!found) {
+        showVoucherError('Invalid code – try again');
         return;
     }
+
+    // FIX: Check per-user limit returned by get_discount.php
+    if (found.remainingForUser !== null && found.remainingForUser !== undefined) {
+        if (found.remainingForUser <= 0) {
+            showVoucherError('You\'ve already used this voucher');
+            return;
+        }
+    }
+
+    // FIX: Check global remaining uses
+    if (found.remainingGlobal !== null && found.remainingGlobal !== undefined) {
+        if (found.remainingGlobal <= 0) {
+            showVoucherError('Voucher is fully redeemed');
+            return;
+        }
+    }
+
+    // FIX: Check minimum purchase requirement
+    const currentSubtotal = getSelectedSubtotal();
+    if (found.minPurchase && currentSubtotal < found.minPurchase) {
+        showVoucherError(`Min. purchase ₱${found.minPurchase.toFixed(2)} required`);
+        return;
+    }
+
     activeVoucher = {
         code:          found.code,
         type:          found.type,
         discountValue: found.discountValue,
-        maxDiscount:   found.maxDiscount ?? null
+        maxDiscount:   found.maxDiscount ?? null,
+        minPurchase:   found.minPurchase ?? 0
     };
     updateTotalsAndFooter();
     closeVoucherInput();

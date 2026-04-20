@@ -2,6 +2,7 @@
 require_once '../config.php';
 require_once '../auth_admin.php';
 requireAdmin('../index.php');
+requireRole([]);  // Head Admin only
 ?>
 <!DOCTYPE html>
 <html>
@@ -16,76 +17,7 @@ requireAdmin('../index.php');
     </head>
 
     <body>
-        <aside class="sidebar">
-            <ul class="nav-links">
-
-                <li class="nav-item">
-                    <a href="dashboard.php" class="nav-link">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="product.php" class="nav-link">
-                        <i class="fas fa-box"></i>
-                        <span>Product</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="orders.php" class="nav-link">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Order</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="users.php" class="nav-link">
-                        <i class="fas fa-users"></i>
-                        <span>User</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="messages.php" class="nav-link">
-                        <i class="fas fa-envelope"></i>
-                        <span>Message</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="feedback.php" class="nav-link">
-                        <i class="fas fa-star"></i>
-                        <span>Feedback</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="report.php" class="nav-link">
-                        <i class="fas fa-file-alt"></i>
-                        <span>Report</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="notifications.php" class="nav-link">
-                        <i class="fas fa-bell"></i>
-                        <span>Notifications</span>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a href="settings.php" class="nav-link">
-                        <i class="fas fa-cog"></i>
-                        <span>Setting</span>
-                    </a>
-                </li>
-            </ul>
-            <div class="sidebar-toggle" id="sidebarToggle">
-                <i class="fas fa-chevron-left"></i>
-            </div>
-        </aside>
+        <?php $activePage = 'settings'; require_once __DIR__ . '/sidebar.php'; ?>
 
         <main class="main">
             <header class="header">

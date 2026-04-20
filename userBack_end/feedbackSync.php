@@ -28,8 +28,8 @@ function pushAdminNotification(mysqli $conn, string $type, string $title, string
     $createdAt = $createdAt ?: date('Y-m-d H:i:s');
     $stmt = $conn->prepare(
         'INSERT INTO admin_notifications (type, title, message, data_json, source_key, is_read, created_at)
-         VALUES (?, ?, ?, ?, ?, 0, ?)
-         ON DUPLICATE KEY UPDATE id = id'
+        VALUES (?, ?, ?, ?, ?, 0, ?)
+        ON DUPLICATE KEY UPDATE id = id'
     );
     if (!$stmt) return;
     $stmt->bind_param('ssssss', $type, $title, $message, $payload, $sourceKey, $createdAt);

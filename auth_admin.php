@@ -1,69 +1,67 @@
 <?php
-if (!defined('LG_SESSION_SCOPE')) {
-    define('LG_SESSION_SCOPE', 'admin');
-}
+
+
+if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'admin');
 require_once __DIR__ . '/session_bootstrap.php';
 
-function isLoggedIn() {
-    return isset($_SESSION['email']) && isset($_SESSION['role']);
-}
+define('ROLE_HEAD',     'head');
+define('ROLE_INV_ORD',  'inventory_orderAdmin');
+define('ROLE_MSG_FB',   'message_feedbackAdmin');
 
-function isAdmin() {
-    return isLoggedIn() && $_SESSION['role'] === 'admin';
-}
 
-function requireLogin($redirect = 'New folder/Login/user-login.php') {
-    if (!isLoggedIn()) {
-        header("Location: $redirect");
+function requireAdmin(string $redirectTo = 'New%20folder/Login/user-login.php'): void
+{
+    if (empty($_SESSION['admin_id'])) {
+        header('Location: ' . $redirectTo);
         exit();
     }
 }
 
-function requireAdmin($redirect = 'New folder/Admin/admin-login.php') {
-    if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') return;
+function requireRole(array $allowedRoles, string $redirectTo = '../admin/dashboard.php'): void
+{
+    $position = $_SESSION['position'] ?? '';
 
-    // Recover admin session for fallback admin credential flow.
-    $sessionEmail = trim((string)($_SESSION['email'] ?? ''));
-    if ($sessionEmail !== '' && defined('ADMIN_EMAIL') && strcasecmp($sessionEmail, (string)ADMIN_EMAIL) === 0) {
-        $_SESSION['role'] = 'admin';
-        $_SESSION['user_id'] = (int)($_SESSION['user_id'] ?? 0);
-        $_SESSION['first_name'] = (string)($_SESSION['first_name'] ?? 'Admin');
-        $_SESSION['last_name'] = (string)($_SESSION['last_name'] ?? 'User');
-        return;
+    // Head admin always has full access
+    if ($position === ROLE_HEAD) return;
+
+    if (!in_array($position, $allowedRoles, true)) {
+        header('Location: ' . $redirectTo . (str_contains($redirectTo, '?') ? '&' : '?') . 'access_denied=1');
+        exit();
     }
-
-    // Recover admin role for DB-backed admin accounts if user_id exists.
-    $sessionUserId = (int)($_SESSION['user_id'] ?? 0);
-    if ($sessionUserId > 0) {
-        if (!isset($GLOBALS['conn']) || !($GLOBALS['conn'] instanceof mysqli)) {
-            require __DIR__ . '/config.php';
-        }
-
-        $conn = $GLOBALS['conn'] ?? null;
-        if ($conn instanceof mysqli) {
-            $stmt = $conn->prepare('SELECT user_id, first_name, last_name, email, role FROM users WHERE user_id = ? LIMIT 1');
-        } else {
-            $stmt = false;
-        }
-
-        if ($stmt) {
-            $stmt->bind_param('i', $sessionUserId);
-            $stmt->execute();
-            $row = $stmt->get_result()->fetch_assoc();
-            $stmt->close();
-
-            if ($row && strtolower((string)($row['role'] ?? '')) === 'admin') {
-                $_SESSION['user_id'] = (int)$row['user_id'];
-                $_SESSION['first_name'] = (string)($row['first_name'] ?? '');
-                $_SESSION['last_name'] = (string)($row['last_name'] ?? '');
-                $_SESSION['email'] = (string)($row['email'] ?? '');
-                $_SESSION['role'] = 'admin';
-                return;
-            }
-        }
-    }
-
-    header("Location: $redirect");
-    exit();
 }
-?>
+
+function isHead(): bool
+{
+    return ($_SESSION['position'] ?? '') === ROLE_HEAD;
+}
+
+function isInventoryOrder(): bool
+{
+    $p = $_SESSION['position'] ?? '';
+    return $p === ROLE_HEAD || $p === ROLE_INV_ORD;
+}
+
+function isMessageFeedback(): bool
+{
+    $p = $_SESSION['position'] ?? '';
+    return $p === ROLE_HEAD || $p === ROLE_MSG_FB;
+}
+
+function canAccess(string $page): bool
+{
+    $position = $_SESSION['position'] ?? '';
+
+    if ($position === ROLE_HEAD) return true;
+
+    $matrix = [
+        ROLE_INV_ORD => ['dashboard', 'product', 'orders', 'notifications'],
+        ROLE_MSG_FB  => ['dashboard', 'messages', 'feedback', 'notifications'],
+    ];
+
+    return in_array($page, $matrix[$position] ?? [], true);
+}
+
+function getAdminPosition(): string
+{
+    return $_SESSION['position'] ?? '';
+}

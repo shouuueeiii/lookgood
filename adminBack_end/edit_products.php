@@ -6,6 +6,15 @@ require_once '../config.php';
 require_once '../auth_admin.php';
 requireAdmin();
 
+// ── Role-based access control ─────────────────────────────────
+$_pos = $_SESSION['position'] ?? '';
+if ($_pos !== 'head' && $_pos !== 'inventory_orderAdmin') {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: insufficient permissions']);
+    exit();
+}
+
+
 function ensureProductDetailColumns(mysqli $conn): void {
     $definitions = [
         'frameHeight' => 'DECIMAL(6,2) NULL',

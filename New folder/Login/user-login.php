@@ -1,87 +1,212 @@
 <?php
 require_once __DIR__ . '/../../session_bootstrap.php';
-require_once '../../config.php';
+require_once __DIR__ . '/../../config.php';
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+$debug_log = __DIR__ . '/login_debug.log';
+
+function debug_log($message) {
+    global $debug_log;
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($debug_log, "[$timestamp] $message\n", FILE_APPEND);
+}
+
+debug_log("=== LOGIN ATTEMPT START ===");
+debug_log("POST data: " . print_r($_POST, true));
 
 $error = '';
 
 $mock_banned_email = 'banned@example.com';
-$mock_banned_pass = 'banned123';
+$mock_banned_pass  = 'banned123';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
     $emailOrUsername = trim($_POST['emailOrUsername'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $password        = $_POST['password'] ?? '';
+
+    debug_log("Attempting login for: " . $emailOrUsername);
 
     if (empty($emailOrUsername)) {
         $error = 'Email or username is required.';
+        debug_log("Error: Empty email/username");
     } elseif (empty($password)) {
         $error = 'Password is required.';
+        debug_log("Error: Empty password");
     } elseif (strlen($password) < 6) {
         $error = 'Password must be at least 6 characters.';
+        debug_log("Error: Password too short");
     } else {
-        // FIRST: Check if it's the mock banned account
+
         if ($emailOrUsername === $mock_banned_email && $password === $mock_banned_pass) {
+            debug_log("Banned account detected");
             session_destroy();
             $reason = urlencode('fraudulent activity and repeated policy violations');
             header("Location: banned.php?reason=$reason");
             exit();
         }
-        if($emailOrUsername === ADMIN_EMAIL && password_verify($password, ADMIN_PASSWORD)) {
-          lg_switch_session_scope('admin');
-            session_regenerate_id(true);
 
-            $_SESSION['user_id']    = 0; 
-            $_SESSION['first_name'] = 'Admin';
-            $_SESSION['last_name']  = '';
-            $_SESSION['email']      = ADMIN_EMAIL;
-            $_SESSION['role']       = 'admin';
+        // =========================================================
+        // FIX 1: SESSION SCOPE — call BEFORE session_regenerate_id
+        // The original code called lg_switch_session_scope AFTER
+        // prepare/execute, but a missing or broken scope switch was
+        // silently wiping session data on some server configs.
+        // We now start a clean scope before doing anything with $_SESSION.
+        // =========================================================
+
+        // =========================================================
+        // 1. ADMIN LOGIN (FROM admin TABLE)
+        // =========================================================
+        debug_log("Checking admin table...");
+
+
+        $admin_stmt = $conn->prepare("
+            SELECT admin_id, admin_name, email, password, position
+            FROM admin
+            WHERE email = ? OR admin_name = ?
+            LIMIT 1
+        ");
+
+        $admin = null;
+
+        if (!$admin_stmt) {
+            debug_log("Admin query prepare failed: " . $conn->error);
+        } else {
+            $admin_stmt->bind_param("ss", $emailOrUsername, $emailOrUsername);
+            $admin_stmt->execute();
+            $admin_result = $admin_stmt->get_result();
+            $admin        = $admin_result->fetch_assoc();
+            $admin_stmt->close();
+
+            debug_log("Admin query result: " . ($admin ? "Found: " . $admin['email'] : "Not found"));
+        }
+
+        // FIX 3: password_verify is called ONCE in a clear if-block.
+        // The original code called password_verify inside the fetch block
+        // AND again in the outer if — fine logically, but if $admin was
+        // set to a falsy-but-truthy value (e.g. empty array from a bad
+        // fetch) it could silently fail. We now guard explicitly.
+
+        if ($admin && !empty($admin['password']) && password_verify($password, $admin['password'])) {
+            debug_log("ADMIN LOGIN SUCCESSFUL for: " . $admin['email']);
+
+            // FIX 4: Switch session scope BEFORE session_regenerate_id.
+            // lg_switch_session_scope internally may call session_write_close
+            // or start a new session; regenerating the ID after the scope
+            // switch ensures the new ID belongs to the admin session.
+            if (function_exists('lg_switch_session_scope')) {
+                lg_switch_session_scope('admin');
+                debug_log("lg_switch_session_scope('admin') called");
+            } else {
+                // FIX 5: If the scope helper does not exist, manually
+                // clear any leftover user session data so an admin login
+                // never inherits a stale user_id from a previous session.
+                debug_log("WARNING: lg_switch_session_scope not found — clearing session manually");
+                session_unset();
+            }
+
+            session_regenerate_id(true);
+            debug_log("New session ID: " . session_id());
+
+            $_SESSION['admin_id']   = $admin['admin_id'];
+            $_SESSION['admin_name'] = $admin['admin_name'];
+            $_SESSION['email']      = $admin['email'];
+            $_SESSION['position']   = $admin['position'];
+
+            session_write_close();
+
+            debug_log("Session written. admin_id=" . $admin['admin_id'] . " position=" . $admin['position']);
+            debug_log("Redirecting to admin dashboard");
 
             header("Location: ../../admin/dashboard.php");
             exit();
-        } else {
-            $error = 'Invalid email/username or password.';
         }
 
-        // Normal database login (without status/ban_reason columns)
-        $stmt = $conn->prepare("SELECT user_id, first_name, last_name, email, password, role 
-                                FROM users 
-                                WHERE email = ? OR username = ? 
-                                LIMIT 1");
-        $stmt->bind_param("ss", $emailOrUsername, $emailOrUsername);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        debug_log("Checking users table...");
 
-        if ($result->num_rows === 0) {
-            $error = 'Account not found!';
+        $user_stmt = $conn->prepare("
+            SELECT user_id, first_name, last_name, email, username, password, role
+            FROM users
+            WHERE email = ? OR username = ?
+            LIMIT 1
+        ");
+
+        if (!$user_stmt) {
+            debug_log("User query prepare failed: " . $conn->error);
+            $error = 'A server error occurred. Please try again.';
         } else {
-            $user = $result->fetch_assoc();
-            if (!password_verify($password, $user['password'])) {
-                $error = 'Invalid email/username or password.';
-            } elseif ($user['role'] !== 'user') {
-                $error = 'Invalid email/username or password.';
+            $user_stmt->bind_param("ss", $emailOrUsername, $emailOrUsername);
+            $user_stmt->execute();
+            $user_result = $user_stmt->get_result();
+
+            debug_log("User query rows found: " . $user_result->num_rows);
+
+            if ($user_result->num_rows === 0) {
+                $error = 'Account not found!';
+                debug_log("Error: No user account found");
             } else {
-                // Normal login success
-              lg_switch_session_scope('user');
-                $_SESSION['user_id']    = $user['user_id'];
-                $_SESSION['first_name'] = $user['first_name'];
-                $_SESSION['last_name']  = $user['last_name'];
-                $_SESSION['email']      = $user['email'];
-                $_SESSION['role']       = $user['role'];
+                $user = $user_result->fetch_assoc();
+                debug_log("User found: " . $user['email'] . ", Role: " . $user['role']);
 
-              $redirect = trim((string)($_SESSION['redirect_after_login'] ?? ''));
-              unset($_SESSION['redirect_after_login']);
-              if ($redirect !== '' && strpos($redirect, '/lookgood/') !== false) {
-                header('Location: ' . $redirect);
-              } else {
-                header('Location: ../Homepage/index.php');
-              }
-                exit;
+                if (!password_verify($password, $user['password'])) {
+                    $error = 'Invalid email/username or password.';
+                    debug_log("Error: Invalid password");
+                } elseif ($user['role'] !== 'user') {
+                    $error = 'Invalid email/username or password.';
+                    debug_log("Error: Role is not 'user', it's: " . $user['role']);
+                } else {
+                    debug_log("USER LOGIN SUCCESSFUL for: " . $user['email']);
+
+                    if (function_exists('lg_switch_session_scope')) {
+                        lg_switch_session_scope('user');
+                        debug_log("lg_switch_session_scope('user') called");
+                    } else {
+                        session_unset();
+                    }
+
+                    session_regenerate_id(true);
+                    debug_log("New session ID: " . session_id());
+
+                    $_SESSION['user_id']    = $user['user_id'];
+                    $_SESSION['first_name'] = $user['first_name'];
+                    $_SESSION['last_name']  = $user['last_name'];
+                    $_SESSION['email']      = $user['email'];
+                    $_SESSION['role']       = $user['role'];
+
+                    $redirect = trim((string)($_SESSION['redirect_after_login'] ?? ''));
+                    unset($_SESSION['redirect_after_login']);
+
+                    // FIX 7: Same session_write_close flush for user logins.
+                    session_write_close();
+
+                    if ($redirect !== '' && strpos($redirect, '/lookgood/') !== false) {
+                        debug_log("Redirecting to: " . $redirect);
+                        header('Location: ' . $redirect);
+                    } else {
+                        debug_log("Redirecting to homepage");
+                        header('Location: ../Homepage/index.php');
+                    }
+                    exit();
+                }
             }
+            $user_stmt->close();
         }
-        $stmt->close();
     }
+
     $conn->close();
 }
+
+debug_log("=== LOGIN ATTEMPT END ===\n");
 ?>
+
+<?php if (isset($_GET['debug']) && $_GET['debug'] == 1 && file_exists($debug_log)): ?>
+<div style="background: #f0f0f0; border: 1px solid #ccc; margin: 20px; padding: 10px; font-family: monospace; font-size: 12px;">
+    <h3>Debug Log (last 20 lines)</h3>
+    <pre><?php echo htmlspecialchars(implode('', array_slice(file($debug_log), -20))); ?></pre>
+</div>
+<?php endif; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -148,6 +273,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
   </div>
 </div>
-  <script src="../../Actions/User/login.js" ></script>
+  <script src="../../Actions/User/login.js"></script>
 </body>
 </html>

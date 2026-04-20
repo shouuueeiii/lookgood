@@ -11,6 +11,15 @@ if (!isset($_SESSION['email']) || $role !== 'admin') {
     exit();
 }
 
+// ── Position guard: Head Admin only ───────────────────────────
+$_pos = $_SESSION['position'] ?? '';
+if ($_pos !== 'head') {
+    http_response_code(403);
+    echo json_encode(['error' => 'Forbidden: Head Admin access only']);
+    exit();
+}
+
+
 header('Content-Type: application/json');
 
 function parse_date(string $value, DateTime $fallback): DateTime {

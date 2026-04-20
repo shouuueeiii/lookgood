@@ -329,15 +329,13 @@ function openOrderModal(order) {
     const shippingFee = Number(order.shippingFee || 0);
     const subtotal = Math.max(0, Number(order.total || 0) - shippingFee);
 
-    const headerOrderId = order.id ? `Order #${order.id}` : 'Order #—';
-
     setText('modalCustomerName', order.customerName || '—');
-    setText('modalHeaderOrderID', headerOrderId);
+    setText('modalHeaderOrderID', order.id || '—');
     setText('modalOrderID', order.id || '—');
     setText('modalCustomerEmail', order.customerEmail || '—');
     setText('modalCustomerPhone', order.customerPhone || '—');
     setText('modalPaymentMethodOrder', order.paymentMethod || '—');
-    setText('modalShippingMethod', order.shippingMethod || '—');
+    setText('modalShippingMethod', order.shippingMethod || 'Standard Delivery');
     setText('modalTotalAmount', toMoney(order.total));
     setText('modalPaymentStatus', order.paymentStatus || '—');
     setText('modalShippingFullName', order.customerName || '—');
@@ -349,7 +347,7 @@ function openOrderModal(order) {
     setText('modalZip', order.zip || '—');
     setText('modalRegion', region);
     setText('modalDeliveryNote', order.deliveryNote || '—');
-    setText('modalCourierName', order.courierName || order.shippingMethod || '—');
+    setText('modalCourierName', order.shippingMethod || 'Standard Delivery');
     setText('modalEstimatedDelivery', order.estimatedDelivery || '—');
     setText('modalTrackingNumber', order.trackingNumber || '—');
     setText('modalSubtotal', toMoney(subtotal));
@@ -382,31 +380,10 @@ function openOrderModal(order) {
 
     const timeline = document.getElementById('modalTimeline');
     if (timeline) {
-        const status = String(order.status || '').toLowerCase();
-        const paymentStatus = String(order.paymentStatus || '').toLowerCase();
-        const paid = paymentStatus === 'paid';
-
-        const processedDone = ['processing', 'shipped', 'delivered'].includes(status);
-        const shippedDone = ['shipped', 'delivered'].includes(status);
-        const deliveredDone = status === 'delivered';
-
-        const steps = [
-            { label: 'Order Placed', icon: 'fa-cart-shopping', done: true, time: order.date || '—' },
-            { label: 'Payment Confirmed', icon: 'fa-credit-card', done: paid || processedDone, time: order.paymentDate || order.date || '—' },
-            { label: 'Order Processed', icon: 'fa-gear', done: processedDone, time: processedDone ? (order.processedDate || order.date || '—') : '—' },
-            { label: 'Order Shipped', icon: 'fa-truck', done: shippedDone, time: shippedDone ? (order.shippedDate || order.date || '—') : '—' },
-            { label: status === 'cancelled' ? 'Order Cancelled' : 'Order Delivered', icon: status === 'cancelled' ? 'fa-ban' : 'fa-circle-check', done: status === 'cancelled' || deliveredDone, time: (status === 'cancelled' || deliveredDone) ? (order.deliveredDate || order.date || '—') : '—' }
-        ];
-
-        timeline.innerHTML = steps.map((step) => `
-            <div class="om-timeline-entry ${step.done ? 'completed' : 'pending'}">
-                <div class="om-timeline-marker"><i class="fas ${step.icon}"></i></div>
-                <div class="om-timeline-body">
-                    <strong>${step.label}</strong>
-                    <span>${step.time}</span>
-                </div>
-            </div>
-        `).join('');
+        timeline.innerHTML = `
+            <div class="om-timeline-entry"><strong>Placed</strong><span>${order.date || '—'}</span></div>
+            <div class="om-timeline-entry"><strong>Status</strong><span>${order.status || '—'}</span></div>
+        `;
     }
 
     orderModal.classList.add('show');
