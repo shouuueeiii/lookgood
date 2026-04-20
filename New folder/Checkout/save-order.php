@@ -218,7 +218,7 @@ try {
             SELECT totalUsageLimit, perUserLimit
             FROM discount
             WHERE discountCode = ?
-              AND NOW() BETWEEN startDate AND endDate
+            AND NOW() BETWEEN startDate AND endDate
             LIMIT 1
             FOR UPDATE
         ");
