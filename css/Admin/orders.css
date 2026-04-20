@@ -202,6 +202,7 @@
     width: min(92vw, 640px);
     max-height: min(88vh, 760px);
     background: #fff;
+    font-family: inherit;
     border-radius: 24px;
     overflow: hidden;
     display: flex;
@@ -215,7 +216,7 @@
 .om-header {
     background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
     border-bottom: 1px solid #e2e8f0;
-    padding: 12px 16px 10px;
+    padding: 14px 18px 12px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -226,16 +227,16 @@
 .om-header-text {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     z-index: 1;
 }
 
 .om-eyebrow {
-    font-size: 9px;
+    font-size: 13px;
     font-weight: 700;
-    letter-spacing: 1.8px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
-    color: #64748b;
+    color: #475569;
 }
 
 .om-customer-name {
@@ -247,12 +248,13 @@
 }
 
 .om-order-id {
-    font-size: 15px;
-    color: var(--text-primary);
-    font-family: 'Courier New', monospace;
-    margin-top: 1px;
+    font-size: 22px;
+    color: #0f172a;
+    font-family: inherit;
+    margin-top: 0;
     font-weight: 700;
     word-break: break-word;
+    line-height: 1.2;
 }
 
 .om-header-right {
@@ -267,7 +269,7 @@
 .om-status-badge {
     padding: 4px 10px;
     border-radius: 9999px;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.2px;
     text-transform: uppercase;
@@ -367,7 +369,7 @@
     padding-bottom: 8px;
     border-bottom: 1px solid #e2e8f0;
     color: #0f172a;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: 0.2px;
 }
@@ -423,11 +425,11 @@
 .om-customer-field-label,
 .om-address-label,
 .om-shipping-field-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.6px;
 }
 
 .om-customer-field-value,
@@ -435,7 +437,7 @@
 .om-shipping-field-value,
 .om-payment-status,
 .om-field-value {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     color: #0f172a;
     word-break: break-word;
@@ -496,19 +498,19 @@
 }
 
 .om-item-name {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     color: #0f172a;
     overflow-wrap: anywhere;
 }
 
 .om-item-qty {
-    font-size: 12px;
+    font-size: 14px;
     color: #64748b;
 }
 
 .om-item-price {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 800;
     color: #0f172a;
     white-space: nowrap;
@@ -534,7 +536,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    font-size: 14px;
+    font-size: 16px;
     color: #334155;
 }
 
@@ -552,7 +554,7 @@
 }
 
 .om-summary-total span {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 800;
 }
 
@@ -566,31 +568,81 @@
 }
 
 .om-timeline {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
+    padding-left: 2px;
+}
+
+.om-timeline::before {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: #e2e8f0;
 }
 
 .om-timeline-entry {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    padding: 10px 12px;
-    background: #f8fafc;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #f1f5f9;
     border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    border-radius: 14px;
+    position: relative;
 }
 
-.om-timeline-entry strong {
-    font-size: 13px;
+.om-timeline-marker {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid #dbe2ea;
+    color: #475569;
+    font-size: 14px;
+    flex-shrink: 0;
+    z-index: 1;
+}
+
+.om-timeline-entry.completed .om-timeline-marker {
     color: #0f172a;
+    border-color: #cbd5e1;
+    background: #ffffff;
 }
 
-.om-timeline-entry span {
-    font-size: 13px;
+.om-timeline-entry.pending .om-timeline-marker {
+    color: #94a3b8;
+    border-color: #e2e8f0;
+}
+
+.om-timeline-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.om-timeline-body strong {
+    font-size: 15px;
+    color: #0f172a;
+    line-height: 1.25;
+}
+
+.om-timeline-body span {
+    font-size: 14px;
     color: #64748b;
-    text-align: right;
+    line-height: 1.3;
+}
+
+.om-timeline-entry.pending .om-timeline-body strong {
+    color: #475569;
 }
 
 .om-footer {
