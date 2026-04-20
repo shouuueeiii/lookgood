@@ -3,20 +3,11 @@ if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'admin');
 require_once __DIR__ . '/../session_bootstrap.php';
 require_once __DIR__ . '/../config.php';
 
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (empty($_SESSION['admin_id'])) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
     exit();
 }
-
-// ── Role-based access control ─────────────────────────────────
-$_pos = $_SESSION['position'] ?? '';
-if ($_pos !== 'head' && $_pos !== 'message_feedbackAdmin') {
-    http_response_code(403);
-    echo json_encode(['error' => 'Forbidden: insufficient permissions']);
-    exit();
-}
-
 
 header('Content-Type: application/json');
 

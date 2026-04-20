@@ -3,7 +3,7 @@ if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'admin');
 require_once __DIR__ . '/../session_bootstrap.php';
 require_once __DIR__ . '/../config.php';
 
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (empty($_SESSION['admin_id'])) {
     http_response_code(401);
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Unauthorized']);

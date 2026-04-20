@@ -4,6 +4,7 @@ require_once '../auth_admin.php';
 requireAdmin();
 
 // ── Role-based access control ─────────────────────────────────
+
 $_pos = $_SESSION['position'] ?? '';
 if ($_pos !== 'head' && $_pos !== 'inventory_orderAdmin') {
     http_response_code(403);

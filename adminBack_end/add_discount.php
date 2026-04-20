@@ -4,6 +4,12 @@ require_once __DIR__ . '/../auth_admin.php';
 requireAdmin();
 
 $_pos = $_SESSION['position'] ?? '';
+
+if (empty($_SESSION['admin_id'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit();
+}
 if ($_pos !== 'head' && $_pos !== 'inventory_orderAdmin') {
     http_response_code(403);
     echo json_encode(['error' => 'Forbidden: insufficient permissions']);
@@ -65,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             (discountCode, carts, description, discountValue,
             minPurchase, maxDiscount, discountCategory,
             startDate, endDate, totalUsageLimit, UsagePerUser)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
 
     if (!$stmt) {

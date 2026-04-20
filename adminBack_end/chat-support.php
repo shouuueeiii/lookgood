@@ -6,7 +6,7 @@ require_once __DIR__ . '/../session_bootstrap.php';
 require_once __DIR__ . '/../config.php';
 
 // Check if admin is authenticated
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (empty($_SESSION['admin_id'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit;

@@ -3,22 +3,12 @@ if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'admin');
 require_once __DIR__ . '/../session_bootstrap.php';
 require_once __DIR__ . '/../config.php';
 
-$role = strtolower(trim((string)($_SESSION['role'] ?? '')));
-if (!isset($_SESSION['email']) || $role !== 'admin') {
+if (empty($_SESSION['admin_id'])) {
     http_response_code(401);
     header('Content-Type: application/json');
     echo json_encode(['error' => 'Unauthorized']);
     exit();
 }
-
-// ── Position guard: Head Admin only ───────────────────────────
-$_pos = $_SESSION['position'] ?? '';
-if ($_pos !== 'head') {
-    http_response_code(403);
-    echo json_encode(['error' => 'Forbidden: Head Admin access only']);
-    exit();
-}
-
 
 header('Content-Type: application/json');
 

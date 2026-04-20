@@ -61,7 +61,6 @@ if ($method === 'GET') {
     exit();
 }
 
-// ── POST — toggle (add/remove) a product in the wishlist ─────────────────────
 if ($method === 'POST') {
     $input     = json_decode(file_get_contents('php://input'), true);
     $productId = trim($input['product_id'] ?? '');
@@ -72,7 +71,6 @@ if ($method === 'POST') {
         exit();
     }
 
-    // Check if already in wishlist
     $chk = $conn->prepare(
         "SELECT id FROM wishlist WHERE user_id = ? AND product_id = ? LIMIT 1"
     );
@@ -83,7 +81,6 @@ if ($method === 'POST') {
     $chk->close();
 
     if ($exists) {
-        // Remove
         $del = $conn->prepare(
             "DELETE FROM wishlist WHERE user_id = ? AND product_id = ?"
         );
@@ -104,7 +101,6 @@ if ($method === 'POST') {
     exit();
 }
 
-// ── DELETE — remove a product from wishlist ───────────────────────────────────
 if ($method === 'DELETE') {
     $input     = json_decode(file_get_contents('php://input'), true);
     $productId = trim($input['product_id'] ?? '');

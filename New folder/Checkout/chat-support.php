@@ -3,7 +3,7 @@ if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
 require_once __DIR__ . '/../../session_bootstrap.php';
 header('Content-Type: application/json');
 
-require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../../config.php';
 
 function has_column(mysqli $conn, string $table, string $column): bool
 {

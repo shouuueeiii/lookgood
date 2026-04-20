@@ -12,17 +12,16 @@ function isUser() {
     return isLoggedIn() && $_SESSION['role'] === 'user';
 }
 
-function requireLogin($redirect = '../New folder/Login/user-login.php') {
+function requireLogin($redirect = '../New%20folder/Login/user-login.php') {
     if (!isLoggedIn()) {
         header("Location: $redirect");
         exit();
     }
 }
 
-function requireUser($redirect = '../New folder/Login/user-login.php') {
+function requireUser($redirect = '../New%20folder/Login/user-login.php') {
     if (isset($_SESSION['role']) && $_SESSION['role'] === 'user' && isset($_SESSION['user_id'])) return;
 
-    // Recover role for valid user sessions coming from older flows where role may be missing.
     $sessionUserId = (int)($_SESSION['user_id'] ?? 0);
     if ($sessionUserId > 0) {
         require_once __DIR__ . '/config.php';

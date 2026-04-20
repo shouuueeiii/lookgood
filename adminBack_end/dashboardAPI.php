@@ -3,7 +3,7 @@ if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'admin');
 require_once __DIR__ . '/../session_bootstrap.php';
 require_once __DIR__ . '/../config.php';
 
-if (!isset($_SESSION['email']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+if (empty($_SESSION['admin_id'])) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
     exit();
@@ -25,13 +25,12 @@ function percent_change(float $current, float $previous): float {
 $data = [];
 $year = date('Y');
 
-// Monthly revenue from checkout table.
 $monthlySales = array_fill(0, 12, 0.0);
 $res = $conn->query(
     "SELECT MONTH(created_at) AS month, SUM(total_amount) AS revenue
-     FROM checkout
-     WHERE YEAR(created_at) = {$year}
-     GROUP BY MONTH(created_at)"
+    FROM checkout
+    WHERE YEAR(created_at) = {$year}
+    GROUP BY MONTH(created_at)"
 );
 if ($res) {
     while ($row = $res->fetch_assoc()) {
@@ -78,7 +77,7 @@ foreach ($rows as $row) {
 }
 $data['category_sales'] = $categorySales;
 
-// Recent activities: latest orders + latest users.
+
 $activities = [];
 
 $res = $conn->query(
@@ -129,12 +128,12 @@ $res = $conn->query(
             c.full_name AS customer_name,
             GROUP_CONCAT(p.name SEPARATOR ', ') AS product_names,
             c.total_amount
-     FROM checkout c
-     LEFT JOIN order_items oi ON c.order_id = oi.order_id
-     LEFT JOIN products p ON oi.product_id = p.product_id
-     GROUP BY c.order_id, c.full_name, c.total_amount, c.created_at
-     ORDER BY c.created_at DESC
-     LIMIT 5"
+    FROM checkout c
+    LEFT JOIN order_items oi ON c.order_id = oi.order_id
+    LEFT JOIN products p ON oi.product_id = p.product_id
+    GROUP BY c.order_id, c.full_name, c.total_amount, c.created_at
+    ORDER BY c.created_at DESC
+    LIMIT 5"
 );
 if ($res) {
     while ($row = $res->fetch_assoc()) {
@@ -165,7 +164,6 @@ $data['avg_order_value'] = $data['total_orders'] > 0
     ? round($data['total_revenue'] / $data['total_orders'], 2)
     : 0.0;
 
-// Month-over-month trends for summary cards.
 $currentMonth = (int)date('n');
 $currentYear = (int)date('Y');
 $previousMonth = $currentMonth === 1 ? 12 : ($currentMonth - 1);

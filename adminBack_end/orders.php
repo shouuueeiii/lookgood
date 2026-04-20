@@ -30,21 +30,11 @@ function pushAdminNotification(mysqli $conn, string $type, string $title, string
     $stmt->close();
 }
 
-$role = strtolower(trim((string)($_SESSION['role'] ?? '')));
-if (!isset($_SESSION['email']) || $role !== 'admin') {
+if (empty($_SESSION['admin_id'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Unauthorized']);
     exit();
 }
-
-// ── Role-based access control ─────────────────────────────────
-$_pos = $_SESSION['position'] ?? '';
-if ($_pos !== 'head' && $_pos !== 'inventory_orderAdmin') {
-    http_response_code(403);
-    echo json_encode(['error' => 'Forbidden: insufficient permissions']);
-    exit();
-}
-
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 

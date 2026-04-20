@@ -16,7 +16,6 @@ if ($product_id === '' || $quantity <= 0) {
 }
 
 if ($action === 'buy_now') {
-    // Only read shipping/payment fields when actually checking out
     $full_name      = $_POST['full_name']      ?? '';
     $phone          = $_POST['phone']          ?? '';
     $province       = $_POST['province']       ?? '';

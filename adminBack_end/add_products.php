@@ -3,7 +3,12 @@ require_once '../config.php';
 require_once '../auth_admin.php';
 requireAdmin();
 
-// ── Role-based access control ─────────────────────────────────
+if (empty($_SESSION['admin_id'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit();
+}
+
 $_pos = $_SESSION['position'] ?? '';
 if ($_pos !== 'head' && $_pos !== 'inventory_orderAdmin') {
     http_response_code(403);

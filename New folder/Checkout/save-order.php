@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../session_bootstrap.php';
 header('Content-Type: application/json');
 
 // Try to load database connection
-if (!@include_once __DIR__ . '/../db.php') {
+if (!@include_once __DIR__ . '/../../config.php') {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Database connection failed']);
     exit;
@@ -20,7 +20,6 @@ if (!@include_once dirname(dirname(__DIR__)) . '/auth_user.php') {
     exit;
 }
 
-// Check auth but return JSON error instead of redirecting (API endpoint)
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'user') {
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Unauthorized - User not logged in']);
@@ -43,8 +42,8 @@ function pushAdminNotification(mysqli $conn, string $type, string $title, string
     if ($payload === false) $payload = '{}';
     $stmt = $conn->prepare(
         'INSERT INTO admin_notifications (type, title, message, data_json, source_key, is_read)
-         VALUES (?, ?, ?, ?, ?, 0)
-         ON DUPLICATE KEY UPDATE id = id'
+        VALUES (?, ?, ?, ?, ?, 0)
+        ON DUPLICATE KEY UPDATE id = id'
     );
     if (!$stmt) return;
     $stmt->bind_param('sssss', $type, $title, $message, $payload, $sourceKey);
@@ -65,7 +64,6 @@ function ensureClientOrderRefColumn(mysqli $conn): void {
     }
 }
 
-// ── Ensure discount_usage tracking table exists ─────────────────────────────
 function ensureDiscountUsageTable(mysqli $conn): void {
     $conn->query("
         CREATE TABLE IF NOT EXISTS discount_usage (
@@ -161,7 +159,6 @@ try {
     $orderId = (int)$insert->insert_id;
     $insert->close();
 
-    // ── 2. Insert order items + deduct stock ─────────────────────────────────
     $itemStmt = $conn->prepare('INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)');
     if (!$itemStmt) {
         throw new Exception('Failed to prepare order item insert');

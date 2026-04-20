@@ -26,7 +26,7 @@ if(isset($_SESSION['email'])){
         <!--Header-->
 
         <main class="main">
-             <header class="header">
+            <header class="header">
                 <div class="sidebar-header">
                     <div class="logo-icon">
                         <img src="../uploads/logo/lookgood-black.png" alt="look good logo" class="logo-img">
@@ -51,7 +51,7 @@ if(isset($_SESSION['email'])){
                         </div>
 
                         <div class="notification-list" id="notificationList">
-                            <!-- Notifications will be populated here -->
+
                         </div>
 
                         <div class="notification-footer">
@@ -79,10 +79,8 @@ if(isset($_SESSION['email'])){
                         </div>
                     </div>
                 </div>
-              
+            
             </header>
-
-            <!--Main Content-->
 
             <section class="content">
             <?php if (!empty($_GET['access_denied'])): ?>
@@ -110,7 +108,7 @@ if(isset($_SESSION['email'])){
                                 <div class="stat-value" id="dashboardTotalProducts">0</div>
                                 <div class="stat-label">Total Products</div>
                                 <div class="stat-change" id="dashboardTrendProducts">
-                                     <i class="fas fa-minus"></i> 0%
+                                    <i class="fas fa-minus"></i> 0%
                                 </div>
                             </div>
                         </div>
