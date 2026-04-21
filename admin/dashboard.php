@@ -63,7 +63,7 @@ if(isset($_SESSION['email'])){
                 <div class="profile-dropdown-container">
                     <div class="profile-trigger" id="profileTrigger">
                         <img src="/global/pic.png" alt="admin" class="avatar">
-                        <span>Erica R.</span>
+                        <span id="profileNameDisplay">...</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
 
@@ -246,7 +246,7 @@ if(isset($_SESSION['email'])){
                     <!-- Profile card -->
                     <div class="ep-profile-card">
                         <div class="ep-avatar-wrapper">
-                            <div class="ep-avatar-initials" id="epAvatarInitials">ER</div>
+                            <div class="ep-avatar-initials" id="epAvatarInitials"></div>
                             <img src="/global/pic.png" alt="Profile" id="epAvatarImg" class="ep-avatar-img" onerror="this.style.display='none'">
                             <label for="profileImageInput" class="ep-avatar-edit" title="Change photo">
                                 <i class="fas fa-pencil-alt"></i>
@@ -254,8 +254,8 @@ if(isset($_SESSION['email'])){
                             <input type="file" id="profileImageInput" accept="image/*" style="display: none;" name='profileImageInput'>
                         </div>
                         <div class="ep-card-info">
-                            <div class="ep-card-name">Erica Ramirez</div>
-                            <div class="ep-card-email">ericakes.ramirez@lookgoodframes.com</div>
+                            <div class="ep-card-name" id="epCardName"></div>
+                            <div class="ep-card-email" id="epCardEmail"></div>
                             <label for="profileImageInput" class="ep-change-photo-btn">
                                 <i class="fas fa-camera"></i> Change photo
                             </label>
@@ -263,35 +263,42 @@ if(isset($_SESSION['email'])){
                     </div>
 
                     <!-- Two-column fields -->
-                    <div class="ep-form-grid">
-                        <div class="ep-form-group">
-                            <label class="ep-label">FULL NAME</label>
-                            <input type="text" class="ep-input" id="fullName" value="Erica Ramirez" name='fullName'>
-                        </div>
-                        <div class="ep-form-group">
-                            <label class="ep-label">ROLE</label>
-                            <input type="text" class="ep-input" id="role" value="Admin" readonly name='role'>
-                        </div>
-                    </div>
 
-                    <!-- Full-width email -->
-                    <div class="ep-form-group" style="margin-top: 14px;">
-                        <label class="ep-label">EMAIL ADDRESS</label>
-                        <input type="email" class="ep-input" id="email" value="ericakes.ramirez@lookgoodframes.com" name='email'>
+                <div class="ep-form-grid">
+                    <div class="ep-form-group">
+                        <label class="ep-label">FULL NAME</label>
+                        <input type="text" class="ep-input" id="fullName" name='fullName'>
                     </div>
-
-                    <div class="ep-section-title" style="margin-top: 10px;">Change password</div>
-
-                    <div class="ep-form-grid" style="margin-top: 12px; margin-bottom: 8px;">
-                        <div class="ep-form-group">
-                            <label class="ep-label">NEW PASSWORD</label>
-                            <input type="password" class="ep-input" id="newPassword" placeholder="Enter new password" name='newPassword'>
-                        </div>
-                        <div class="ep-form-group">
-                            <label class="ep-label">CONFIRM PASSWORD</label>
-                            <input type="password" class="ep-input" id="confirmPassword" placeholder="Confirm password" name='confirmPassword'>
-                        </div>
+                    <div class="ep-form-group">
+                        <label class="ep-label">ROLE</label>
+                        <input type="text" class="ep-input" id="profilePosition" readonly name='role'>
                     </div>
+                </div>
+
+                <!-- Full-width email -->
+                <div class="ep-form-group" style="margin-top: 14px;">
+                    <label class="ep-label">EMAIL ADDRESS</label>
+                    <input type="email" class="ep-input" id="profileEmail" name='email'>
+                </div>
+
+                <div class="ep-section-title" style="margin-top: 10px;">Change password</div>
+
+                <!-- Add current password field -->
+                <div class="ep-form-group" style="margin-top: 12px;">
+                    <label class="ep-label">CURRENT PASSWORD</label>
+                    <input type="password" class="ep-input" id="currentPassword" placeholder="Enter current password" name='currentPassword'>
+                </div>
+
+                <div class="ep-form-grid" style="margin-top: 12px; margin-bottom: 8px;">
+                    <div class="ep-form-group">
+                        <label class="ep-label">NEW PASSWORD</label>
+                        <input type="password" class="ep-input" id="newPassword" placeholder="Enter new password" name='newPassword'>
+                    </div>
+                    <div class="ep-form-group">
+                        <label class="ep-label">CONFIRM PASSWORD</label>
+                        <input type="password" class="ep-input" id="confirmPassword" placeholder="Confirm password" name='confirmPassword'>
+                    </div>
+                </div>
 
                 </div>
 

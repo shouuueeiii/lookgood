@@ -59,23 +59,24 @@ requireRole(['message_feedbackAdmin']);
             </div>
 
             <div class="profile-dropdown-container">
-                <div class="profile-trigger" id="profileTrigger">
-                    <img src="../uploads/logo/lookgood-black.png" alt="admin" class="avatar">
-                    <span>Erica R.</span>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="profile-dropdown" id="profileDropdown">
-                    <div class="dropdown-item" id="editProfileBtn">
-                        <i class="fas fa-user-edit"></i>
-                        <span>Edit Profile</span>
+                    <div class="profile-trigger" id="profileTrigger">
+                        <img src="/global/pic.png" alt="admin" class="avatar">
+                        <span id="profileNameDisplay">...</span>
+                        <i class="fas fa-chevron-down"></i>
                     </div>
-                    <div class="dropdown-divider"></div>
-                    <div class="dropdown-item" id="logoutBtn">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
+
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="dropdown-item" id="editProfileBtn">
+                            <i class="fas fa-user-edit"></i>
+                            <span>Edit Profile</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <div class="dropdown-item" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </div>
                     </div>
                 </div>
-            </div>
         </header>
 
         <!-- Content -->
@@ -286,16 +287,16 @@ requireRole(['message_feedbackAdmin']);
                     <!-- Profile card -->
                     <div class="ep-profile-card">
                         <div class="ep-avatar-wrapper">
-                            <div class="ep-avatar-initials" id="epAvatarInitials">ER</div>
-                            <img src="../uploads/logo/lookgood-black.png" alt="Profile" id="epAvatarImg" class="ep-avatar-img" onerror="this.style.display='none'">
+                            <div class="ep-avatar-initials" id="epAvatarInitials"></div>
+                            <img src="/global/pic.png" alt="Profile" id="epAvatarImg" class="ep-avatar-img" onerror="this.style.display='none'">
                             <label for="profileImageInput" class="ep-avatar-edit" title="Change photo">
                                 <i class="fas fa-pencil-alt"></i>
                             </label>
                             <input type="file" id="profileImageInput" accept="image/*" style="display: none;" name='profileImageInput'>
                         </div>
                         <div class="ep-card-info">
-                            <div class="ep-card-name">Erica Ramirez</div>
-                            <div class="ep-card-email">ericakes.ramirez@lookgoodframes.com</div>
+                            <div class="ep-card-name" id="epCardName"></div>
+                            <div class="ep-card-email" id="epCardEmail"></div>
                             <label for="profileImageInput" class="ep-change-photo-btn">
                                 <i class="fas fa-camera"></i> Change photo
                             </label>
@@ -310,17 +311,22 @@ requireRole(['message_feedbackAdmin']);
                         </div>
                         <div class="ep-form-group">
                             <label class="ep-label">ROLE</label>
-                            <input type="text" class="ep-input" id="role" value="Admin" readonly name='role'>
+                            <input type="text" class="ep-input" id="profilePosition" value="Admin" readonly name='role'>
                         </div>
                     </div>
 
                     <!-- Full-width email -->
                     <div class="ep-form-group" style="margin-top: 14px;">
                         <label class="ep-label">EMAIL ADDRESS</label>
-                        <input type="email" class="ep-input" id="email" value="ericakes.ramirez@lookgoodframes.com" name='email'>
+                        <input type="email" class="ep-input" id="profileEmail"  name='email'>
                     </div>
 
                     <div class="ep-section-title" style="margin-top: 10px;">Change password</div>
+
+                    <div class="ep-form-group" style="margin-top: 12px;">
+                        <label class="ep-label">CURRENT PASSWORD</label>
+                        <input type="password" class="ep-input" id="currentPassword" placeholder="Enter current password" name='currentPassword'>
+                    </div>
 
                     <div class="ep-form-grid" style="margin-top: 12px; margin-bottom: 8px;">
                         <div class="ep-form-group">
