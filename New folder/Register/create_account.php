@@ -2,7 +2,7 @@
 session_start();
 header('Content-Type: application/json');
 
-require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../../';
 
 function ensureUsersPhoneColumn(mysqli $conn): void {
     $check = $conn->prepare("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'phone' LIMIT 1");
