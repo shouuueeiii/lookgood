@@ -1,46 +1,32 @@
 <?php
-/**
- * userBack_end/cartAPI.php
- *
- * Unified cart API for logged-in users — reads/writes the `carts` table.
- *
- * GET  → { success, items: [...] }
- * POST → { action: "add"|"remove"|"update"|"clear", product_id, quantity }
- *       → { success, message }
- */
 
-error_reporting(E_ALL);
-ini_set('display_errors', '0');
 
 if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
 require_once __DIR__ . '/../session_bootstrap.php';
+require_once __DIR__ . '/../config.php';
+
 header('Content-Type: application/json');
 
-if (!@include_once __DIR__ . '/../config.php') {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Database connection failed']);
-    exit;
-}
-
-$userId = $_SESSION['user_id'] ?? null;
-if (!$userId) {
+if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Not logged in']);
     exit;
 }
 
-// ── GET: return all cart items ────────────────────────────────────────────────
+$userId = $_SESSION['user_id'];
+// pang display
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $stmt = $conn->prepare("
-        SELECT c.product_id, c.quantity,
-               p.name, p.price, p.image, p.stock
-        FROM carts c
-        LEFT JOIN products p ON p.product_id = c.product_id
-        WHERE c.user_id = ?
-        ORDER BY c.id ASC
-    ");
+    $stmt = $conn->prepare(
+        "SELECT c.product_id, c.quantity,
+                p.name, p.price, p.image, p.stock
+         FROM carts c
+         LEFT JOIN products p ON p.product_id = c.product_id
+         WHERE c.user_id = ?
+         ORDER BY c.created_at ASC"
+    );
     if (!$stmt) {
-        echo json_encode(['success' => false, 'error' => 'Query failed']);
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Query prepare failed: ' . $conn->error]);
         exit;
     }
     $stmt->bind_param('s', $userId);
@@ -52,14 +38,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     exit;
 }
 
-// ── POST: mutations ───────────────────────────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+    exit;
+}
+
 $input     = json_decode(file_get_contents('php://input'), true) ?: [];
-$action    = trim($input['action'] ?? 'add');
-$productId = trim((string)($input['product_id'] ?? ''));
+$action    = trim($input['action']     ?? 'add');
+$productId = trim($input['product_id'] ?? '');
 $quantity  = max(1, (int)($input['quantity'] ?? 1));
 
 if ($action === 'clear') {
     $stmt = $conn->prepare('DELETE FROM carts WHERE user_id = ?');
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Query prepare failed: ' . $conn->error]);
+        exit;
+    }
     $stmt->bind_param('s', $userId);
     $stmt->execute();
     $stmt->close();
@@ -73,43 +69,63 @@ if ($productId === '') {
     exit;
 }
 
+// alis na yung item sa cart
 if ($action === 'remove') {
     $stmt = $conn->prepare('DELETE FROM carts WHERE user_id = ? AND product_id = ?');
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Query prepare failed: ' . $conn->error]);
+        exit;
+    }
     $stmt->bind_param('ss', $userId, $productId);
     $stmt->execute();
     $stmt->close();
-    echo json_encode(['success' => true, 'message' => 'Item removed']);
+    echo json_encode(['success' => true, 'message' => 'Item removed from cart']);
     exit;
 }
 
 if ($action === 'update') {
-    // Set quantity to exact value (used by qty controls in cart.php)
+
     $stmt = $conn->prepare(
-        'INSERT INTO carts (user_id, product_id, quantity)
-         VALUES (?, ?, ?)
-         ON DUPLICATE KEY UPDATE quantity = VALUES(quantity)'
+        "INSERT INTO carts (user_id, product_id, quantity)
+        VALUES (?, ?, ?)
+        ON UNIQUE KEY UPDATE quantity = VALUES(quantity)"
     );
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Query prepare failed: ' . $conn->error]);
+        exit;
+    }
     $stmt->bind_param('ssi', $userId, $productId, $quantity);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Failed to update cart: ' . $stmt->error]);
+        $stmt->close();
+        exit;
+    }
     $stmt->close();
-    echo json_encode(['success' => true, 'message' => 'Quantity updated']);
+    echo json_encode(['success' => true, 'message' => 'Cart updated']);
     exit;
 }
-
-// action === 'add' — INSERT or increment
 $stmt = $conn->prepare(
-    'INSERT INTO carts (user_id, product_id, quantity)
+    "INSERT INTO carts (user_id, product_id, quantity)
      VALUES (?, ?, ?)
-     ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)'
+     ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)"
 );
 if (!$stmt) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Query failed']);
+    echo json_encode(['success' => false, 'error' => 'Query prepare failed: ' . $conn->error]);
     exit;
 }
 $stmt->bind_param('ssi', $userId, $productId, $quantity);
-$stmt->execute();
+if (!$stmt->execute()) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Failed to add to cart: ' . $stmt->error]);
+    $stmt->close();
+    exit;
+}
 $stmt->close();
 
 echo json_encode(['success' => true, 'message' => 'Item added to cart']);
+exit;
 ?>

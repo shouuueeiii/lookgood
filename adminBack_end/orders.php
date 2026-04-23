@@ -40,13 +40,19 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
 if ($method === 'POST') {
     $payload = json_decode(file_get_contents('php://input'), true) ?: [];
-    $orderId = (int)($payload['id'] ?? 0);
+    $orderId     = (int)($payload['id'] ?? 0);
     $newStatusRaw = strtolower(trim((string)($payload['status'] ?? '')));
-    $orderSource  = strtolower(trim((string)($payload['orderSource'] ?? 'regular')));
 
     $allowed = [
-        'pending', 'processing', 'shipped', 'out_for_delivery',
-        'delivered', 'completed', 'cancelled', 'returned'
+        'pending',
+        'processing',
+        'shipped',
+        'out_for_delivery',
+        'delivered',
+        'completed',
+        'cancelled',
+        'returned',
+        'refunded'
     ];
 
     if ($orderId <= 0 || !in_array($newStatusRaw, $allowed, true)) {
@@ -55,17 +61,53 @@ if ($method === 'POST') {
         exit();
     }
 
-    $table = ($orderSource === 'guest') ? 'guest_checkout' : 'checkout';
-    $idCol  = ($orderSource === 'guest') ? 'id'             : 'order_id';
+    // ─── Derive payment_status from the new order status ──────────────────
+    // Only mark Paid when order is actually progressing (Shipped/Delivered).
+    // Refunded gets its own status. Cancelled/Returned = Failed.
+    $paymentStatusMap = [
+        'pending'          => 'Pending',
+        'processing'       => 'Pending',
+        'shipped'          => 'Paid',
+        'out_for_delivery' => 'Paid',
+        'delivered'        => 'Paid',
+        'completed'        => 'Paid',
+        'cancelled'        => 'Failed',
+        'returned'         => 'Failed',
+        'refunded'         => 'Refunded',
+    ];
+    $newPaymentStatus = $paymentStatusMap[$newStatusRaw] ?? 'Pending';
 
-    $update = $conn->prepare("UPDATE {$table} SET status = ? WHERE {$idCol} = ?");
+    // ─── Derive estimated_delivery from shipping_method ───────────────────
+    // We read the existing shipping_method from DB so we don't overwrite it.
+    $estDelivery = null;
+    $smStmt = $conn->prepare('SELECT shipping_method FROM checkout WHERE order_id = ?');
+    if ($smStmt) {
+        $smStmt->bind_param('i', $orderId);
+        $smStmt->execute();
+        $smStmt->bind_result($existingShippingMethod);
+        $smStmt->fetch();
+        $smStmt->close();
+
+        $shippingDeliveryMap = [
+            'standard shipping' => '3–5 business days',
+            'free shipping'     => '5–7 business days',
+            'express shipping'  => '1–2 business days',
+        ];
+        $smKey = strtolower(trim((string)($existingShippingMethod ?? '')));
+        $estDelivery = $shippingDeliveryMap[$smKey] ?? null;
+    }
+
+    // ─── Update order status + payment_status + estimated_delivery ────────
+    $update = $conn->prepare(
+        'UPDATE checkout SET status = ?, payment_status = ?, estimated_delivery = ? WHERE order_id = ?'
+    );
     if (!$update) {
         http_response_code(500);
         echo json_encode(['success' => false, 'error' => 'Failed to prepare update']);
         exit();
     }
 
-    $update->bind_param('si', $newStatusRaw, $orderId);
+    $update->bind_param('sssi', $newStatusRaw, $newPaymentStatus, $estDelivery, $orderId);
     $ok = $update->execute();
     $affected = $update->affected_rows;
     $update->close();
@@ -76,65 +118,73 @@ if ($method === 'POST') {
         exit();
     }
 
-    $prefix = ($orderSource === 'guest') ? 'guest_order' : 'order';
-
+    // ─── Notifications ────────────────────────────────────────────────────
     pushAdminNotification(
-        $conn, 'status',
-        'Order Status Updated',
+        $conn, 'status', 'Order Status Updated',
         'Order #' . $orderId . ' status changed to ' . strtoupper($newStatusRaw) . '.',
-        ['orderId' => (string)$orderId, 'status' => $newStatusRaw, 'source' => $orderSource],
-        $prefix . ':status:' . $orderId . ':' . $newStatusRaw
+        ['orderId' => (string)$orderId, 'status' => $newStatusRaw],
+        'order:status:' . $orderId . ':' . $newStatusRaw
     );
 
     if ($newStatusRaw === 'cancelled') {
         pushAdminNotification($conn, 'cancel', 'Order Cancelled',
             'Order #' . $orderId . ' was cancelled.',
-            ['orderId' => (string)$orderId],
-            $prefix . ':cancel:' . $orderId
-        );
+            ['orderId' => (string)$orderId], 'order:cancel:' . $orderId);
     }
-
     if ($newStatusRaw === 'returned') {
         pushAdminNotification($conn, 'return', 'Order Returned',
             'Order #' . $orderId . ' was returned.',
-            ['orderId' => (string)$orderId],
-            $prefix . ':return:' . $orderId
-        );
+            ['orderId' => (string)$orderId], 'order:return:' . $orderId);
     }
-
-    pushAdminNotification($conn, 'payment', 'Payment Updated',
-        'Payment state for Order #' . $orderId . ' updated with order status ' . strtoupper($newStatusRaw) . '.',
-        ['orderId' => (string)$orderId, 'status' => $newStatusRaw],
-        'payment:' . $prefix . ':' . $orderId . ':' . $newStatusRaw
+    if ($newStatusRaw === 'refunded') {
+        pushAdminNotification($conn, 'refund', 'Order Refunded',
+            'Order #' . $orderId . ' was refunded.',
+            ['orderId' => (string)$orderId], 'order:refund:' . $orderId);
+    }
+    pushAdminNotification(
+        $conn, 'payment', 'Payment Updated',
+        'Payment for Order #' . $orderId . ' is now ' . strtoupper($newPaymentStatus) . '.',
+        ['orderId' => (string)$orderId, 'paymentStatus' => $newPaymentStatus],
+        'payment:' . $orderId . ':' . $newStatusRaw
     );
 
-    echo json_encode(['success' => true]);
+    echo json_encode(['success' => true, 'paymentStatus' => $newPaymentStatus]);
     exit();
 }
 
+// ─── GET: fetch all orders ────────────────────────────────────────────────────
+
 function normalizeOrderStatus(string $status): string {
     $s = strtolower(trim($status));
-    if ($s === 'out_for_delivery') return 'Shipped';
-    if ($s === 'pending') return 'Pending';
-    if ($s === 'processing') return 'Processing';
-    if ($s === 'shipped') return 'Shipped';
-    if ($s === 'delivered') return 'Delivered';
-    if ($s === 'completed') return 'Delivered';
-    if ($s === 'cancelled') return 'Pending';
-    return 'Pending';
+    $map = [
+        'pending'          => 'Pending',
+        'processing'       => 'Processing',
+        'shipped'          => 'Shipped',
+        'out_for_delivery' => 'Shipped',
+        'delivered'        => 'Delivered',
+        'completed'        => 'Delivered',
+        'cancelled'        => 'Cancelled',
+        'returned'         => 'Cancelled',
+        'refunded'         => 'Cancelled',
+    ];
+    return $map[$s] ?? 'Pending';
 }
 
-function inferPaymentStatus(string $status): string {
-    $s = strtolower(trim($status));
-    if ($s === 'pending' || $s === 'processing') return 'Pending';
-    if ($s === 'shipped' || $s === 'out_for_delivery' || $s === 'delivered' || $s === 'completed') return 'Paid';
-    return 'Pending';
+function normalizeShippingMethod(string $raw): string {
+    $s = strtolower(trim($raw));
+    $map = [
+        'standard shipping' => 'Standard Shipping (3–5 days)',
+        'free shipping'     => 'Free Shipping (5–7 days)',
+        'express shipping'  => 'Express Shipping (1–2 days)',
+    ];
+    return $map[$s] ?? ($raw ?: 'Standard Shipping (3–5 days)');
 }
 
+// ── Main query — now includes payment_status, shipping_method,
+//                tracking_number, estimated_delivery ──────────────────────────
 $sql = "
     SELECT
         c.order_id,
-        CONCAT('#', LPAD(c.order_id, 5, '0')) AS display_order_id,
         c.created_at,
         c.total_amount,
         c.full_name,
@@ -143,9 +193,13 @@ $sql = "
         c.address,
         c.zip,
         c.payment_method,
+        c.payment_status,
+        c.payment_confirmed_at,
         c.status,
         c.shipping_fee,
-        'regular' AS order_source,
+        c.shipping_method,
+        c.tracking_number,
+        c.estimated_delivery,
         COALESCE(
             NULLIF(TRIM(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))), ''),
             NULLIF(u.username, ''),
@@ -153,49 +207,28 @@ $sql = "
             c.email,
             CONCAT('User #', c.user_id)
         ) AS customer_name,
-        GROUP_CONCAT(CONCAT(COALESCE(p.name, oi.product_id), ' x', COALESCE(oi.quantity, 1)) ORDER BY oi.id SEPARATOR ', ') AS product_list
+        GROUP_CONCAT(
+            CONCAT(COALESCE(p.name, oi.product_id), ' x', COALESCE(oi.quantity, 1))
+            ORDER BY oi.id SEPARATOR ', '
+        ) AS product_list
     FROM checkout c
     LEFT JOIN users u ON u.user_id = c.user_id
     LEFT JOIN order_items oi ON oi.order_id = c.order_id
     LEFT JOIN products p ON p.product_id = oi.product_id
     GROUP BY
-        c.order_id, display_order_id, c.created_at, c.total_amount,
-        c.full_name, c.email, c.phone, c.address, c.zip,
-        c.payment_method, c.status, c.shipping_fee, order_source, customer_name
-
-    UNION ALL
-
-    SELECT
-        gc.id AS order_id,
-        COALESCE(gc.guest_order_id, CONCAT('GUEST-', LPAD(gc.id, 5, '0'))) AS display_order_id,
-        gc.created_at,
-        gc.total_amount,
-        gc.full_name,
-        gc.email,
-        gc.phone,
-        gc.address,
-        gc.zip,
-        gc.payment_method,
-        gc.status,
-        gc.shipping_fee,
-        'guest' AS order_source,
-        COALESCE(gc.full_name, gc.email, CONCAT('Guest #', gc.id)) AS customer_name,
-        GROUP_CONCAT(CONCAT(COALESCE(p.name, goi.product_id), ' x', COALESCE(goi.quantity, 1)) ORDER BY goi.id SEPARATOR ', ') AS product_list
-    FROM guest_checkout gc
-    LEFT JOIN guest_order_items goi ON goi.order_id = gc.id
-    LEFT JOIN products p ON p.product_id = goi.product_id
-    GROUP BY
-        gc.id, display_order_id, gc.created_at, gc.total_amount,
-        gc.full_name, gc.email, gc.phone, gc.address, gc.zip,
-        gc.payment_method, gc.status, gc.shipping_fee, order_source, customer_name
-
-    ORDER BY created_at DESC, order_id DESC
+        c.order_id, c.created_at, c.total_amount, c.full_name,
+        c.email, c.phone, c.address, c.zip,
+        c.payment_method, c.payment_status, c.status, c.shipping_fee,
+        c.shipping_method, c.tracking_number, c.estimated_delivery,
+        c.payment_confirmed_at,
+        customer_name
+    ORDER BY c.created_at DESC, c.order_id DESC
 ";
 
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Failed to prepare query']);
+    echo json_encode(['success' => false, 'error' => 'Failed to prepare query: ' . $conn->error]);
     exit();
 }
 
@@ -204,36 +237,46 @@ $result = $stmt->get_result();
 
 $orders = [];
 while ($row = $result->fetch_assoc()) {
+    $orderId     = (int)$row['order_id'];
     $statusLabel = normalizeOrderStatus((string)($row['status'] ?? 'pending'));
-    $orderId       = (int)$row['order_id'];
-    $displayId     = (string)($row['display_order_id'] ?? ('#' . str_pad($orderId, 5, '0', STR_PAD_LEFT)));
-    $orderSource   = (string)($row['order_source'] ?? 'regular');
-    $isGuest       = ($orderSource === 'guest');
 
-    $items = [];
+    // ── payment_status: use stored value; fall back to inferring only if NULL/empty
+    $rawPayStatus = trim((string)($row['payment_status'] ?? ''));
+    if ($rawPayStatus === '') {
+        // Legacy rows that existed before migration — infer from order status
+        $s = strtolower($row['status'] ?? 'pending');
+        $rawPayStatus = in_array($s, ['shipped','out_for_delivery','delivered','completed']) ? 'Paid' : 'Pending';
+    }
+    // Normalise capitalisation
+    $paymentStatus = ucfirst(strtolower($rawPayStatus));
 
-    if ($isGuest) {
-        $itemStmt = $conn->prepare(
-            "SELECT goi.product_id, goi.quantity, goi.price,
-                    COALESCE(p.name, goi.product_id) AS product_name,
-                    COALESCE(p.image, '') AS product_image
-             FROM guest_order_items goi
-             LEFT JOIN products p ON p.product_id = goi.product_id
-             WHERE goi.order_id = ?
-             ORDER BY goi.id ASC"
-        );
-    } else {
-        $itemStmt = $conn->prepare(
-            "SELECT oi.product_id, oi.quantity, oi.price,
-                    COALESCE(p.name, oi.product_id) AS product_name,
-                    COALESCE(p.image, '') AS product_image
-             FROM order_items oi
-             LEFT JOIN products p ON p.product_id = oi.product_id
-             WHERE oi.order_id = ?
-             ORDER BY oi.id ASC"
-        );
+    // ── shipping method: use stored value from checkout
+    $rawShipping   = trim((string)($row['shipping_method'] ?? ''));
+    $shippingLabel = normalizeShippingMethod($rawShipping);
+
+    // ── estimated delivery: use stored value, derive from method if missing
+    $estDelivery = trim((string)($row['estimated_delivery'] ?? ''));
+    if ($estDelivery === '') {
+        $smKey = strtolower($rawShipping);
+        $estMap = [
+            'standard shipping' => '3–5 business days',
+            'free shipping'     => '5–7 business days',
+            'express shipping'  => '1–2 business days',
+        ];
+        $estDelivery = $estMap[$smKey] ?? '3–5 business days';
     }
 
+    // ── Items sub-query ───────────────────────────────────────────────────
+    $items = [];
+    $itemStmt = $conn->prepare(
+        "SELECT oi.product_id, oi.quantity, oi.price,
+                COALESCE(p.name, oi.product_id) AS product_name,
+                COALESCE(p.image, '')            AS product_image
+         FROM order_items oi
+         LEFT JOIN products p ON p.product_id = oi.product_id
+         WHERE oi.order_id = ?
+         ORDER BY oi.id ASC"
+    );
     if ($itemStmt) {
         $itemStmt->bind_param('i', $orderId);
         $itemStmt->execute();
@@ -244,31 +287,38 @@ while ($row = $result->fetch_assoc()) {
                 'name'  => (string)($item['product_name'] ?? 'Item'),
                 'qty'   => (int)($item['quantity'] ?? 0),
                 'price' => (float)($item['price'] ?? 0),
-                'image' => !empty($item['product_image']) ? '../uploads/products/' . $item['product_image'] : '/global/jin.jpg'
+                'image' => !empty($item['product_image'])
+                            ? '../uploads/products/' . $item['product_image']
+                            : '/global/jin.jpg'
             ];
         }
         $itemStmt->close();
     }
 
     $orders[] = [
-        'id'              => $displayId,
-        'orderId'         => $orderId,
-        'orderSource'     => $orderSource,
-        'isGuest'         => $isGuest,
-        'customerName'    => (string)($row['customer_name'] ?? 'Customer'),
-        'customerEmail'   => (string)($row['email'] ?? ''),
-        'customerPhone'   => (string)($row['phone'] ?? ''),
-        'product'         => (string)($row['product_list'] ?: 'No items'),
-        'items'           => $items,
-        'status'          => $statusLabel,
-        'date'            => date('M d, Y h:i A', strtotime((string)$row['created_at'])),
-        'total'           => (float)$row['total_amount'],
-        'paymentStatus'   => inferPaymentStatus((string)($row['status'] ?? 'pending')),
-        'paymentMethod'   => (string)($row['payment_method'] ?: 'Gcash'),
-        'shippingMethod'  => 'Standard Delivery',
-        'shippingAddress' => (string)($row['address'] ?? ''),
-        'zip'             => (string)($row['zip'] ?? ''),
-        'shippingFee'     => (float)($row['shipping_fee'] ?? 0)
+        'id'               => (string)$orderId,
+        'orderId'          => $orderId,
+        'order_id'         => 'LG-' . str_pad($orderId, 6, '0', STR_PAD_LEFT),
+        'customerName'     => (string)($row['customer_name'] ?? 'Customer'),
+        'customerEmail'    => (string)($row['email'] ?? ''),
+        'customerPhone'    => (string)($row['phone'] ?? ''),
+        'product'          => (string)($row['product_list'] ?: 'No items'),
+        'items'            => $items,
+        'status'           => $statusLabel,
+        'date'             => date('M d, Y h:i A', strtotime((string)$row['created_at'])),
+        'total'            => (float)$row['total_amount'],
+      
+        'paymentStatus'    => $paymentStatus,
+        'paymentMethod'    => (string)($row['payment_method'] ?: 'GCash'),
+        'shippingMethod'   => $shippingLabel,
+        'estimatedDelivery'=> $estDelivery,
+        'trackingNumber'       => (string)($row['tracking_number'] ?? ''),
+        'paymentConfirmedAt'   => !empty($row['payment_confirmed_at'])
+                                    ? date('M d, Y h:i A', strtotime((string)$row['payment_confirmed_at']))
+                                    : '',
+        'shippingAddress'  => (string)($row['address'] ?? ''),
+        'zip'              => (string)($row['zip'] ?? ''),
+        'shippingFee'      => (float)($row['shipping_fee'] ?? 0),
     ];
 }
 

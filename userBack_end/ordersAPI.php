@@ -46,6 +46,7 @@ function mapStatusForProfile(string $dbStatus): string {
     if ($s === 'delivered') return 'delivered';
     if ($s === 'completed') return 'completed';
     if ($s === 'cancelled') return 'cancelled';
+    if ($s === 'refunded') return 'refunded';
     return 'paid';
 }
 

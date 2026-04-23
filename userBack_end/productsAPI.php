@@ -1,16 +1,11 @@
 <?php
-/**
- * userBack_end/productsAPI.php
- * Public API — returns active products from the database.
- * Used by: Actions/User/products-page.js, product-detail.js, index.js
- *
- * GET ?id=<product_id>       → single product
- * GET ?category=<cat>        → filtered list
- * GET (no params)            → all active products
- */
+
+error_reporting(0);
+ob_start();
 require_once '../config.php';
 if (!defined('LG_SESSION_SCOPE')) define('LG_SESSION_SCOPE', 'user');
 require_once __DIR__ . '/../session_bootstrap.php';
+ob_end_clean();
 
 function ensureProductDetailColumns(mysqli $conn): void {
     $definitions = [
@@ -55,16 +50,22 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
 
-    // ── Single product by ?id= ────────────────────────────────────────────────
     if (!empty($_GET['id'])) {
         $id   = trim($_GET['id']);
         $stmt = $conn->prepare(
             "SELECT p.product_id, p.name, p.description, p.price, p.stock, p.category,
             p.image, p.image_gallery, p.frameWidth, p.frameHeight, p.templeLength, p.lensWidth, p.material, p.color, p.status,
-            s.sales_id, s.sale_price, s.start_date AS sale_start_date, s.end_date AS sale_end_date, s.sale_label
-             FROM products p
-             LEFT JOIN sales s ON s.product_id = p.product_id
-             WHERE p.product_id = ? AND p.status = 'active'"
+            s.sales_id, s.sale_price, s.start_date AS sale_start_date, s.end_date AS sale_end_date, s.sale_label,
+            COALESCE((
+                SELECT SUM(oi.quantity)
+                FROM order_items oi
+                INNER JOIN checkout co ON co.order_id = oi.order_id
+                WHERE oi.product_id = p.product_id
+                AND co.status NOT IN ('cancelled','refunded')
+            ), 0) AS sold_count
+            FROM products p
+            LEFT JOIN sales s ON s.product_id = p.product_id
+            WHERE p.product_id = ? AND p.status = 'active'"
         );
         $stmt->bind_param('s', $id);
         $stmt->execute();
@@ -150,7 +151,6 @@ function formatProduct(array $row): array {
                 }
             }
         } else {
-            // Backward compatibility for rows where image_gallery is a single filename.
             $single = trim((string)$row['image_gallery']);
             if ($single !== '') {
                 $url = buildPublicImageUrl($single, $fsBase, $base);
@@ -206,6 +206,7 @@ function formatProduct(array $row): array {
         'lensWidth'    => nullableFloat($lensWidth),
         'material'     => $material,
         'color'        => $color,
+        'soldCount'    => (int)($row['sold_count'] ?? 0),
         'onSale'       => $onSale,
         'salePrice'    => ($onSale && isset($row['sale_price'])) ? (int)$row['sale_price'] : null,
         'saleStartDate'=> isset($row['sale_start_date']) ? (string)$row['sale_start_date'] : null,

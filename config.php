@@ -9,7 +9,7 @@ define('SITE_URL', 'http://localhost/lookgood/New%20folder/Checkout');
 $host = "localhost";
 $user = "root";
 $password = "";
-$database = "wst";
+$database = "lookgood";
 
 $conn = new mysqli($host, $user, $password, $database);
 if ($conn->connect_error) {

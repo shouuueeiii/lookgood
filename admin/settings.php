@@ -72,7 +72,7 @@ requireRole([]);  // Head Admin only
             <section class="content">
                 <div class="page-header settings-page-header">
                     <h1>Store Configuration</h1>
-                    <p>Manage identity, operations, security, and customer-facing preferences from one place.</p>
+                    <p>Manage your store identity, admin accounts, and storefront appearance all in one place.</p>
                 </div>
 
                 <!-- Tabs -->
@@ -82,21 +82,6 @@ requireRole([]);  // Head Admin only
                     </button>
                     <button class="tab-btn" data-tab="admins">
                         <i class="fas fa-users"></i> Admin Users
-                    </button>
-                    <button class="tab-btn" data-tab="security">
-                        <i class="fas fa-shield-alt"></i> Security
-                    </button>
-                    <button class="tab-btn" data-tab="payment">
-                        <i class="fas fa-credit-card"></i> Payment
-                    </button>
-                    <button class="tab-btn" data-tab="shipping">
-                        <i class="fas fa-truck"></i> Shipping
-                    </button>
-                    <button class="tab-btn" data-tab="orders">
-                        <i class="fas fa-shopping-cart"></i> Order Settings
-                    </button>
-                    <button class="tab-btn" data-tab="notifications">
-                        <i class="fas fa-bell"></i> Notifications
                     </button>
                     <button class="tab-btn" data-tab="appearance">
                         <i class="fas fa-palette"></i> Appearance
@@ -206,9 +191,6 @@ requireRole([]);  // Head Admin only
                     <div class="card">
                         <div class="card-header">
                             <h3>Admin Users</h3>
-                            <button class="btn btn-primary btn-sm" id="addAdminBtn">
-                                <i class="fas fa-plus"></i> Add Admin
-                            </button>
                         </div>
                         <div class="table-container">
                             <table>
@@ -217,8 +199,7 @@ requireRole([]);  // Head Admin only
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Role</th>
-                                        <th>Last Login</th>
-                                        <th>Actions</th>
+                                            <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="adminTableBody">
@@ -226,502 +207,23 @@ requireRole([]);  // Head Admin only
                                         <td><strong>Erica Ramirez</strong></td>
                                         <td>erica.ramirez@lookgoodframes.com</td>
                                         <td><span class="badge badge-info">Main Admin</span></td>
-                                        <td>2 hours ago</td>
                                         <td><button class="btn btn-secondary btn-sm edit-admin-btn"><i class="fas fa-edit"></i></button></td>
                                     </tr>
                                     <tr data-id="2">
                                         <td><strong>Pollyne Anne</strong></td>
                                         <td>pollyneanne@lookgoodframes.com</td>
                                         <td><span class="badge badge-success">Admin</span></td>
-                                        <td>1 day ago</td>
                                         <td><button class="btn btn-secondary btn-sm edit-admin-btn"><i class="fas fa-edit"></i></button></td>
                                     </tr>
                                     <tr data-id="3">
                                         <td><strong>Eds Halili</strong></td>
                                         <td>edsedseds@lookgoodframes.com</td>
                                         <td><span class="badge badge-success">Admin</span></td>
-                                        <td>3 days ago</td>
                                         <td><button class="btn btn-secondary btn-sm edit-admin-btn"><i class="fas fa-edit"></i></button></td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Security Tab -->
-                <div class="tab-content" id="security">
-                    <!-- Change Password Card -->
-                    <div class="card" style="margin-bottom: 24px;">
-                        <div class="card-header">
-                            <h3><i class="fas fa-lock" style="color:var(--text-muted);margin-right:8px;"></i>Change Password</h3>
-                        </div>
-                        <form class="settings-section" id="passwordForm">
-                            <div class="form-group">
-                                <label>Current Password</label>
-                                <div class="input-wrapper">
-                                    <input type="password" placeholder="Enter current password" id="currentPassword" name='currentPassword'>
-                                    <button type="button" class="toggle-password" id="toggleCurrentPassword">
-                                        <i class="fas fa-eye-slash" id="toggleCurrentIcon"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>New Password</label>
-                                    <div class="input-wrapper">
-                                        <input type="password" placeholder="Enter new password" id="newPassword" name='newPassword'>
-                                        <button type="button" class="toggle-password" id="toggleNewPassword">
-                                            <i class="fas fa-eye-slash" id="toggleNewIcon"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Confirm New Password</label>
-                                    <div class="input-wrapper">
-                                        <input type="password" placeholder="Confirm new password" id="confirmPassword" name='confirmPassword'>
-                                        <button type="button" class="toggle-password" id="toggleConfirmPassword">
-                                            <i class="fas fa-eye-slash" id="toggleConfirmIcon"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="info-box">
-                                <p class="info-title">Password Requirements:</p>
-                                <ul class="info-list">
-                                    <li>At least 8 characters long</li>
-                                    <li>Include uppercase and lowercase letters</li>
-                                    <li>Include at least one number</li>
-                                </ul>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-lock"></i> Update Password
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Security Settings Card -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-shield-alt" style="color:var(--text-muted);margin-right:8px;"></i>Security Settings</h3>
-                        </div>
-                        <form class="settings-section" id="securityForm">
-                            <div class="setting-item">
-                                <div class="setting-info">
-                                    <div class="setting-title">Two-Factor Authentication</div>
-                                    <div class="setting-description">Add an extra layer of security to your account</div>
-                                </div>
-                                <div class="toggle-switch">
-                                    <input type="checkbox" id="twoFactor" checked name='twoFactor'>
-                                    <label for="twoFactor" class="toggle-label"><span class="toggle-slider"></span></label>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Session Timeout (minutes)</label>
-                                <input type="number" value="30" min="5" max="120" id="sessionTimeout" style="max-width:200px;" name='sessionTimeout'>
-                                <small>Automatically log out after this period of inactivity</small>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Save
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Payment Tab -->
-                <div class="tab-content" id="payment">
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <h3>Payment Settings</h3>
-                                <p style="color:var(--text-muted);font-size:14px;margin-top:4px;">Configure your store's payment methods and pricing</p>
-                            </div>
-                        </div>
-                        <form class="settings-section" id="paymentForm">
-                            <!-- GCash -->
-                            <div class="payment-section">
-                                <div class="payment-header">
-                                    <div class="payment-icon">
-                                        <i class="fas fa-mobile-alt"></i>
-                                    </div>
-                                    <div class="payment-info">
-                                        <div class="payment-title">GCash Payment</div>
-                                        <div class="payment-description">Accept payments via GCash</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="gcashEnabled" checked name='gcashEnabled'>
-                                        <label for="gcashEnabled" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="payment-details" id="gcashDetails">
-                                    <div class="form-group">
-                                        <label>GCash Account Name</label>
-                                        <input type="text" value="Look Good Frames" id="gcashName" name='gcashName'>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>GCash Mobile Number</label>
-                                        <input type="tel" value="+63 917 123 4567" id="gcashNumber" placeholder="+63 9XX XXX XXXX" name='gcashNumber'>
-                                        <small>This number will be shown to customers for payment</small>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Cash on Delivery -->
-                            <div class="payment-section">
-                                <div class="payment-header">
-                                    <div class="payment-icon">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                    </div>
-                                    <div class="payment-info">
-                                        <div class="payment-title">Cash on Delivery</div>
-                                        <div class="payment-description">Allow customers to pay upon delivery</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="codEnabled" checked name='codEnabled'>
-                                        <label for="codEnabled" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Pricing -->
-                            <div class="pricing-section">
-                                <div class="section-title">
-                                    <i class="fas fa-chart-line"></i>
-                                    <h4>Pricing Configuration</h4>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Tax Rate (%)</label>
-                                        <input type="number" value="8.5" step="0.1" min="0" max="100" id="taxRate" placeholder="0.0" name='taxRate'>
-                                        <small>Applied to all product prices</small>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Shipping Fee (₱)</label>
-                                        <input type="number" value="50.00" step="0.01" min="0" id="shippingFee" placeholder="0.00" name='shippingFee'>
-                                        <small>Standard shipping fee per order</small>
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-top: 10px;">
-                                    <label>Free Shipping Threshold (₱)</label>
-                                    <input type="number" value="500.00" step="0.01" min="0" id="freeShippingThreshold" placeholder="0.00" name='freeShippingThreshold'>
-                                    <small>Orders above this amount get free shipping</small>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Save
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Shipping Tab -->
-                <div class="tab-content" id="shipping">
-                    <div class="card">
-                        <div class="card-header"><h3>Shipping Settings</h3></div>
-                        <form class="settings-section" id="shippingForm">
-                            <!-- Courier Services -->
-                            <div class="section-title">
-                                <i class="fas fa-truck"></i>
-                                <h4>Courier Services</h4>
-                            </div>
-                            <div class="courier-grid">
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">J&T Express</div>
-                                        <div class="setting-description">Enable J&T Express shipping</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="jtEnabled" checked name='jtEnabled'>
-                                        <label for="jtEnabled" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">LBC</div>
-                                        <div class="setting-description">Enable LBC shipping</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="lbcEnabled" checked name='lbcEnabled'>
-                                        <label for="lbcEnabled" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Flash Express</div>
-                                        <div class="setting-description">Enable Flash Express shipping</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="flashEnabled" name='flashEnabled'>
-                                        <label for="flashEnabled" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Ninja Van</div>
-                                        <div class="setting-description">Enable Ninja Van shipping</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="ninjaEnabled" checked name='ninjaEnabled'>
-                                        <label for="ninjaEnabled" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Coverage & Timing -->
-                            <div class="section-title" style="margin-top: 32px;">
-                                <i class="fas fa-map-marked-alt"></i>
-                                <h4>Coverage & Timing</h4>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Coverage Area</label>
-                                    <select id="coverageArea">
-                                        <option value="metro-manila" selected>Metro Manila</option>
-                                        <option value="luzon">Luzon</option>
-                                        <option value="visayas">Visayas</option>
-                                        <option value="mindanao">Mindanao</option>
-                                        <option value="nationwide">Nationwide</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Same-Day Cut-off Time</label>
-                                    <input type="time" value="14:00" id="cutoffTime" name='cutoffTime'>
-                                    <small>Orders after this time will be processed next day</small>
-                                </div>
-                            </div>
-
-                            <!-- Regional Rates -->
-                            <div class="section-title" style="margin-top: 32px;">
-                                <i class="fas fa-tags"></i>
-                                <h4>Regional Shipping Rates</h4>
-                            </div>
-                            <div class="rates-grid">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Metro Manila (₱)</label>
-                                        <input type="number" value="50" step="1" min="0" id="metroManilaRate" placeholder="0" name='metroManilaRate'>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Luzon (₱)</label>
-                                        <input type="number" value="80" step="1" min="0" id="luzonRate" placeholder="0" name='luzonRate'>
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>Visayas (₱)</label>
-                                        <input type="number" value="100" step="1" min="0" id="visayasRate" placeholder="0" name='visayasRate'>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Mindanao (₱)</label>
-                                        <input type="number" value="120" step="1" min="0" id="mindanaoRate" placeholder="0" name='mindanaoRate'>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Save
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Notifications Tab -->
-                <div class="tab-content" id="notifications">
-                    <div class="card">
-                        <div class="card-header"><h3>Notification Settings</h3></div>
-                        <form class="settings-section" id="notificationsForm">
-                            <!-- Admin Alerts -->
-                            <div class="section-title">
-                                <i class="fas fa-bell"></i>
-                                <h4>Admin Alerts</h4>
-                            </div>
-                            <div class="alerts-grid">
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">New Order Alerts</div>
-                                        <div class="setting-description">Get notified when new orders are placed</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="newOrderAlert" checked name='newOrderAlert'>
-                                        <label for="newOrderAlert" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Payment Alerts</div>
-                                        <div class="setting-description">Get notified when payments are received</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="paymentAlert" checked name='paymentAlert'>
-                                        <label for="paymentAlert" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Low Stock Alerts</div>
-                                        <div class="setting-description">Get notified when products are running low</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="lowStockAlert" checked name='lowStockAlert'>
-                                        <label for="lowStockAlert" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Cancellation Alerts</div>
-                                        <div class="setting-description">Get notified when orders are cancelled</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="cancellationAlert" checked name='cancellationAlert'>
-                                        <label for="cancellationAlert" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Customer Notifications -->
-                            <div class="section-title" style="margin-top: 32px;">
-                                <i class="fas fa-envelope"></i>
-                                <h4>Customer Notifications</h4>
-                            </div>
-                            <div class="customer-notifications">
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Order Confirmation Email</div>
-                                        <div class="setting-description">Send email when order is confirmed</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="orderConfirmEmail" checked name='orderConfirmEmail'>
-                                        <label for="orderConfirmEmail" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Shipping Email</div>
-                                        <div class="setting-description">Send email when order is shipped</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="shippingEmail" checked name='shippingEmail'>
-                                        <label for="shippingEmail" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Delivery SMS</div>
-                                        <div class="setting-description">Send SMS when order is out for delivery</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="deliverySms" checked name='deliverySms'>
-                                        <label for="deliverySms" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Review Request Email</div>
-                                        <div class="setting-description">Send email requesting product reviews</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="reviewEmail" name='reviewEmail'>
-                                        <label for="reviewEmail" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Save
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Order Settings Tab -->
-                <div class="tab-content" id="orders">
-                    <div class="card">
-                        <div class="card-header"><h3>Order Settings</h3></div>
-                        <form class="settings-section" id="orderSettingsForm">
-                            <!-- Order Processing -->
-                            <div class="section-title">
-                                <i class="fas fa-cog"></i>
-                                <h4>Order Processing</h4>
-                            </div>
-                            <div class="setting-item">
-                                <div class="setting-info">
-                                    <div class="setting-title">Auto-Confirm Orders</div>
-                                    <div class="setting-description">Automatically confirm new orders without manual approval</div>
-                                </div>
-                                <div class="toggle-switch">
-                                    <input type="checkbox" id="autoConfirm" checked name='autoConfirm'>
-                                    <label for="autoConfirm" class="toggle-label"><span class="toggle-slider"></span></label>
-                                </div>
-                            </div>
-
-                            <!-- Order Management -->
-                            <div class="section-title" style="margin-top: 32px;">
-                                <i class="fas fa-shopping-cart"></i>
-                                <h4>Order Management</h4>
-                            </div>
-                            <div class="order-options">
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Allow Cancellations</div>
-                                        <div class="setting-description">Customers can cancel their orders</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="allowCancellations" checked name='allowCancellations'>
-                                        <label for="allowCancellations" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Allow Returns</div>
-                                        <div class="setting-description">Customers can return products</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="allowReturns" checked name='allowReturns'>
-                                        <label for="allowReturns" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Order Configuration -->
-                            <div class="section-title" style="margin-top: 32px;">
-                                <i class="fas fa-hashtag"></i>
-                                <h4>Order Configuration</h4>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Order ID Prefix</label>
-                                    <input type="text" value="LGF" maxlength="5" id="orderIdPrefix" name='orderIdPrefix'>
-                                    <small>Prefix for all order IDs (max 5 characters)</small>
-                                </div>
-                            </div>
-
-                            <!-- Return & Refund Policy -->
-                            <div class="section-title" style="margin-top: 32px;">
-                                <i class="fas fa-file-contract"></i>
-                                <h4>Return & Refund Policy</h4>
-                            </div>
-                            <div class="form-group">
-                                <label>Policy Text</label>
-                                <textarea rows="6" placeholder="Enter your return and refund policy..." id="refundPolicy">We offer a 30-day return policy for all products. Items must be in original condition with tags attached. Shipping costs for returns are the responsibility of the customer unless the item is defective.</textarea>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Save
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
 
@@ -765,44 +267,6 @@ requireRole([]);  // Head Admin only
                                 </div>
                             </div>
 
-                            <!-- Banner Section -->
-                            <div class="settings-group">
-                                <h4>Banner Image</h4>
-                                <div class="form-group">
-                                    <label>Banner Upload</label>
-                                    <div class="file-upload">
-                                        <input type="file" id="bannerUpload" accept="image/*" style="display: none;" name='bannerUpload'>
-                                        <button type="button" class="btn btn-secondary" id="bannerBtn">
-                                            <i class="fas fa-upload"></i> Choose Banner
-                                        </button>
-                                        <span id="bannerFileName">No banner selected</span>
-                                    </div>
-                                    <small>Recommended: JPG/PNG, 1200x300px</small>
-                                    <div id="bannerPreview" style="margin-top: 12px; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-color); display: none;">
-                                        <img id="bannerPreviewImg" src="" alt="Banner preview" style="max-width: 100%; max-height: 300px; display: block;">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Announcement Bar Section -->
-                            <div class="settings-group">
-                                <h4>Announcement Bar</h4>
-                                <div class="setting-item">
-                                    <div class="setting-info">
-                                        <div class="setting-title">Enable Announcement Bar</div>
-                                        <div class="setting-description">Show announcement bar at the top of your store</div>
-                                    </div>
-                                    <div class="toggle-switch">
-                                        <input type="checkbox" id="announcementEnabled" name='announcementEnabled'>
-                                        <label for="announcementEnabled" class="toggle-label"><span class="toggle-slider"></span></label>
-                                    </div>
-                                </div>
-                                <div class="form-group" id="announcementTextGroup" style="display: none;">
-                                    <label>Announcement Text</label>
-                                    <input type="text" placeholder="Enter your announcement..." id="announcementText" name='announcementText'>
-                                </div>
-                            </div>
-
                             <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save"></i> Save
@@ -811,38 +275,6 @@ requireRole([]);  // Head Admin only
                         </form>
                     </div>
                 </div>
-
-            <!-- Add Admin Modal -->
-            <div class="modal-overlay" id="addAdminModal">
-                <div class="modal-container admin-modal">
-                    <div class="modal-header">
-                        <h2>Add New Admin</h2>
-                        <button class="close-btn" id="closeAddAdminModal"><i class="fas fa-times"></i></button>
-                    </div>
-                    <form class="modal-body" id="addAdminForm">
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" placeholder="Enter full name" id="addAdminName" required name='addAdminName'>
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" placeholder="Enter email" id="addAdminEmail" required name='addAdminEmail'>
-                        </div>
-                        <div class="form-group">
-                            <label>Role</label>
-                            <select id="addAdminRole">
-                                <option value="Admin">Admin</option>
-                                <option value="Main Admin">Main Admin</option>
-                                <option value="Chat Support">Chat Support</option>
-                            </select>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" id="cancelAddAdmin">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Add Admin</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
 
             <!-- Edit Admin Modal -->
             <div class="modal-overlay" id="editAdminModal">

@@ -1,7 +1,7 @@
 <?php
 require_once '../config.php';
 require_once '../auth_admin.php';
-requireAdmin('New%20folder/Login/user-login.php');
+requireAdmin('../home/user-login.php');
 if(isset($_SESSION['email'])){
     $username = $_SESSION['admin_name']?? null;
 }

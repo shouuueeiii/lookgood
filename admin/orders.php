@@ -58,19 +58,16 @@ requireRole(['inventory_orderAdmin']);
                 <div class="profile-dropdown-container">
                     <div class="profile-trigger" id="profileTrigger">
                         <img src="/global/pic.png" alt="admin" class="avatar">
-                        <span id="profileNameDisplay">...</span>
+                        <span>Erica R.</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
-
                     <div class="profile-dropdown" id="profileDropdown">
                         <div class="dropdown-item" id="editProfileBtn">
-                            <i class="fas fa-user-edit"></i>
-                            <span>Edit Profile</span>
+                            <i class="fas fa-user-edit"></i><span>Edit Profile</span>
                         </div>
                         <div class="dropdown-divider"></div>
                         <div class="dropdown-item" id="logoutBtn">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Logout</span>
+                            <i class="fas fa-sign-out-alt"></i><span>Logout</span>
                         </div>
                     </div>
                 </div>
@@ -84,7 +81,7 @@ requireRole(['inventory_orderAdmin']);
 
                 <div class="tabs">
                     <button class="tab-link active" data-tab="ordersTab">Orders</button>
-                    <button class="tab-link" data-tab="paymentsTab">Payment</button>
+                    <button class="tab-link" data-tab="paymentsTab">Payments</button>
                 </div>
 
                 <!-- ORDERS TAB -->
@@ -125,7 +122,7 @@ requireRole(['inventory_orderAdmin']);
                                 <div class="card-search-controls">
                                     <div class="card-search-bar">
                                         <i class="fas fa-search"></i>
-                                        <input type="text" id="orderSearchInput" class="card-search-input" placeholder="Search orders..." name='orderSearchInput'>
+                                        <input type="text" id="orderSearchInput" class="card-search-input" placeholder="Search orders..." name='orderSearchInput' autocomplete="off">
                                     </div>
                                     <select id="orderStatusFilter" class="card-filter-input">
                                         <option value="">All Orders</option>
@@ -243,213 +240,190 @@ requireRole(['inventory_orderAdmin']);
         </main>
 
 
-        <!-- ORDER DETAILS MODAL -->
+
+        <!-- ORDER DETAILS MODAL (ALL SECTIONS HEADER OUTSIDE CARD) -->
         <div id="orderModal" class="modal-overlay">
             <div class="order-modal-card">
-
-                <div class="om-header">
-                    <div class="om-header-text">
-                        <span class="om-eyebrow">Order Details</span>
-                        <h2 class="om-order-id" id="modalHeaderOrderID">—</h2>
+                <div class="order-modal-header">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start; flex: 1; gap: 2px;">
+                        <span class="order-modal-eyebrow">ORDER DETAILS</span>
+                        <span class="order-modal-header-id order-modal-header-id-small" id="modalHeaderOrderID">Order #—</span>
                     </div>
-                    <div class="om-header-right">
-                        <button class="close-btn" id="closeOrderModal">
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 90px;">
+                        <button class="close-btn close-btn-small" id="closeOrderModal">
                             <i class="fas fa-times"></i>
                         </button>
-                        <span class="om-status-badge" id="modalOrderStatus"></span>
+                        <span class="om-status-badge om-status-badge-small" id="modalOrderStatus">PENDING</span>
                     </div>
                 </div>
-
-                <div class="om-body">
-                    <!-- Customer Info Section -->
-                    <div class="om-section">
-                        <div class="om-section-header">
-                            <i class="fas fa-user"></i>
-                            <span>Customer Information</span>
+                <hr class="order-modal-header-divider" />
+                <div class="order-modal-body" style="padding: 24px 32px 0 32px; max-height: 80vh; overflow-y: auto;">
+                    <!-- Customer Information header OUTSIDE card -->
+                    <div class="om-section-header" style="margin-bottom: 8px;">
+                        <i class="fas fa-user" style="color: #6366f1;"></i>
+                        Customer Information
+                    </div>
+                    <div class="shipping-method-card-exact" style="margin-top: 0;">
+                        <div class="shipping-method-grid">
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">NAME</div>
+                                <div class="shipping-method-cell-value" id="modalCustomerName">—</div>
+                            </div>
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">EMAIL</div>
+                                <div class="shipping-method-cell-value" id="modalCustomerEmail">—</div>
+                            </div>
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">PHONE</div>
+                                <div class="shipping-method-cell-value" id="modalCustomerPhone">—</div>
+                            </div>
                         </div>
-                        <div class="om-section-content">
-                            <div class="om-customer-info om-customer-info-inline">
-                                <div class="om-customer-field">
-                                    <span class="om-customer-field-label">Name</span>
-                                    <span class="om-customer-field-value" id="modalCustomerName">—</span>
+                    </div>
+                    <!-- Shipping Address header OUTSIDE card -->
+                    <div class="om-section-header" style="margin-top: 24px; margin-bottom: 8px;">
+                        <i class="fas fa-map-marker-alt" style="color: #6366f1;"></i>
+                        Shipping Address
+                    </div>
+                    <div class="shipping-method-card-exact" style="margin-top: 0;">
+                        <div class="shipping-method-grid">
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">FULL NAME</div>
+                                <div class="shipping-method-cell-value" id="modalShippingFullName">—</div>
+                            </div>
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">PHONE</div>
+                                <div class="shipping-method-cell-value" id="modalShippingPhone">—</div>
+                            </div>
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">ADDRESS LINE 1</div>
+                                <div class="shipping-method-cell-value" id="modalAddressLine1">—</div>
+                            </div>
+                        </div>
+                        <div class="shipping-method-grid" style="margin-top: 12px;">
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">ADDRESS LINE 2</div>
+                                <div class="shipping-method-cell-value" id="modalAddressLine2">—</div>
+                            </div>
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">CITY</div>
+                                <div class="shipping-method-cell-value" id="modalCity">—</div>
+                            </div>
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">PROVINCE</div>
+                                <div class="shipping-method-cell-value" id="modalProvince">—</div>
+                            </div>
+                        </div>
+                        <div class="shipping-method-grid" style="margin-top: 12px;">
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">ZIP CODE</div>
+                                <div class="shipping-method-cell-value" id="modalZip">—</div>
+                            </div>
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">REGION</div>
+                                <div class="shipping-method-cell-value" id="modalRegion">—</div>
+                            </div>
+                            <div class="shipping-method-cell">
+                                <div class="shipping-method-cell-label">DELIVERY NOTE</div>
+                                <div class="shipping-method-cell-value" id="modalDeliveryNote">—</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Shipping Method header OUTSIDE card -->
+                    <div class="order-modal-section">
+                        <div class="om-section-header" style="margin-top: 24px; margin-bottom: 8px;">
+                            <i class="fas fa-truck" style="color: #6366f1;"></i>
+                            Shipping Method
+                        </div>
+                        <div class="order-modal-card shipping-method-card-exact">
+                            <div class="shipping-method-grid">
+                                <div class="shipping-method-cell">
+                                    <div class="shipping-method-cell-label">SHIPPING METHOD</div>
+                                    <div class="shipping-method-cell-value" id="modalCourierName">—</div>
                                 </div>
-                                <div class="om-customer-field">
-                                    <span class="om-customer-field-label">Email</span>
-                                    <span class="om-customer-field-value" id="modalCustomerEmail">—</span>
+                                <div class="shipping-method-cell">
+                                    <div class="shipping-method-cell-label">ESTIMATED DELIVERY</div>
+                                    <div class="shipping-method-cell-value" id="modalEstimatedDelivery">—</div>
                                 </div>
-                                <div class="om-customer-field">
-                                    <span class="om-customer-field-label">Phone</span>
-                                    <span class="om-customer-field-value" id="modalCustomerPhone">—</span>
+                                <div class="shipping-method-cell">
+                                    <div class="shipping-method-cell-label">TRACKING NUMBER</div>
+                                    <div class="shipping-method-cell-value" id="modalTrackingNumber">—</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Shipping Address Section -->
-                    <div class="om-section">
-                        <div class="om-section-header">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Shipping Address</span>
+                    <!-- Items Ordered header OUTSIDE card -->
+                    <div class="order-modal-section">
+                        <div class="om-section-header" style="margin-top: 24px; margin-bottom: 8px;">
+                            <i class="fas fa-shopping-bag" style="color: #6366f1;"></i>
+                            Items Ordered
                         </div>
-                        <div class="om-section-content">
-                            <div class="om-address-block">
-                                <div class="om-address-row">
-                                    <div class="om-address-item">
-                                        <span class="om-address-label">Full Name</span>
-                                        <span class="om-address-value" id="modalShippingFullName">—</span>
+                        <div class="order-modal-card items-ordered-card-exact">
+                            <div id="modalItemsList">
+                                <!-- Example item row for reference:
+                                <div class="item-row-exact">
+                                    <img src="../uploads/products/example.jpg" class="item-image-exact" alt="Steel Nomad">
+                                    <div class="item-details-exact">
+                                        <div class="item-title-exact">Steel Nomad</div>
+                                        <div class="item-qty-exact">Qty: 1</div>
                                     </div>
-                                    <div class="om-address-item">
-                                        <span class="om-address-label">Phone</span>
-                                        <span class="om-address-value" id="modalShippingPhone">—</span>
-                                    </div>
+                                    <div class="item-price-exact">₱3299.00</div>
                                 </div>
-                                <div class="om-address-row">
-                                    <div class="om-address-item">
-                                        <span class="om-address-label">Address Line 1</span>
-                                        <span class="om-address-value" id="modalAddressLine1">—</span>
-                                    </div>
-                                    <div class="om-address-item">
-                                        <span class="om-address-label">Address Line 2</span>
-                                        <span class="om-address-value" id="modalAddressLine2">—</span>
-                                    </div>
-                                    <div class="om-address-item">
-                                        <span class="om-address-label">City</span>
-                                        <span class="om-address-value" id="modalCity">—</span>
-                                    </div>
-                                </div>
-                                <div class="om-address-row">
-                                    <div class="om-address-item">
-                                        <span class="om-address-label">Province</span>
-                                        <span class="om-address-value" id="modalProvince">—</span>
-                                    </div>
-                                    <div class="om-address-item">
-                                        <span class="om-address-label">ZIP Code</span>
-                                        <span class="om-address-value" id="modalZip">—</span>
-                                    </div>
-                                    <div class="om-address-item">
-                                        <span class="om-address-label">Region</span>
-                                        <span class="om-address-value" id="modalRegion">—</span>
-                                    </div>
-                                </div>
-                                <div class="om-address-item om-address-full">
-                                    <span class="om-address-label">Delivery Note</span>
-                                    <span class="om-address-value" id="modalDeliveryNote">—</span>
-                                </div>
+                                -->
                             </div>
                         </div>
                     </div>
-
-                    <!-- Shipping Method Section -->
-                    <div class="om-section">
-                        <div class="om-section-header">
-                            <i class="fas fa-truck"></i>
-                            <span>Shipping Method</span>
+                    <!-- Order Summary header OUTSIDE card -->
+                    <div class="om-section-header" style="margin-top: 24px; margin-bottom: 8px;">
+                        <i class="fas fa-receipt" style="color: #6366f1;"></i>
+                        Order Summary
+                    </div>
+                    <div class="order-summary-card">
+                        <div class="order-summary-row">
+                            <span>Subtotal</span>
+                            <span id="modalSubtotal">₱0.00</span>
                         </div>
-                        <div class="om-section-content">
-                            <div class="om-shipping-method">
-                                <div class="om-shipping-field">
-                                    <span class="om-shipping-field-label">Shipping Method</span>
-                                    <span class="om-shipping-field-value" id="modalCourierName">—</span>
-                                </div>
-                                <div class="om-shipping-field">
-                                    <span class="om-shipping-field-label">Estimated Delivery</span>
-                                    <span class="om-shipping-field-value" id="modalEstimatedDelivery">—</span>
-                                </div>
-                                <div class="om-shipping-field">
-                                    <span class="om-shipping-field-label">Tracking Number</span>
-                                    <span class="om-shipping-field-value" id="modalTrackingNumber">—</span>
-                                </div>
-                            </div>
+                        <div class="order-summary-row">
+                            <span>Shipping Fee</span>
+                            <span id="modalShippingFee">₱0.00</span>
+                        </div>
+                        <div class="order-summary-row" id="modalDiscountRow" style="display:none;">
+                            <span>Discount</span>
+                            <span id="modalDiscount">-₱0.00</span>
+                        </div>
+                        <div class="order-summary-divider"></div>
+                        <div class="order-summary-row order-summary-total">
+                            <span>Total</span>
+                            <span id="modalTotalAmount">₱0.00</span>
+                        </div>
+                        <div class="order-summary-row">
+                            <span>Payment Method</span>
+                            <span id="modalPaymentMethodOrder">—</span>
+                        </div>
+                        <div class="order-summary-row">
+                            <span>Payment Status</span>
+                            <span class="om-payment-status" id="modalPaymentStatus">—</span>
                         </div>
                     </div>
-
-                    <!-- Items Ordered Section -->
-                    <div class="om-section">
-                        <div class="om-section-header">
-                            <i class="fas fa-shopping-bag"></i>
-                            <span>Items Ordered</span>
-                        </div>
-                        <div class="om-section-content">
-                            <div class="om-items-list" id="modalItemsList">
-                                <!-- Items will be populated by JS -->
-                            </div>
-                        </div>
+                    <!-- Order Timeline header OUTSIDE card -->
+                    <div class="om-section-header" style="margin-top: 24px; margin-bottom: 8px;">
+                        <i class="fas fa-clock" style="color: #6366f1;"></i>
+                        Order Timeline
                     </div>
-
-                    <!-- Order Summary Section -->
-                    <div class="om-section">
-                        <div class="om-section-header">
-                            <i class="fas fa-receipt"></i>
-                            <span>Order Summary</span>
-                        </div>
-                        <div class="om-section-content">
-                            <div class="om-summary-grid">
-                                <div class="om-summary-row">
-                                    <span>Subtotal</span>
-                                    <span id="modalSubtotal">₱0.00</span>
-                                </div>
-                                <div class="om-summary-row">
-                                    <span>Shipping Fee</span>
-                                    <span id="modalShippingFee">₱0.00</span>
-                                </div>
-                                <div class="om-summary-row" id="modalDiscountRow" style="display:none;">
-                                    <span>Discount</span>
-                                    <span id="modalDiscount">-₱0.00</span>
-                                </div>
-                                <div class="om-summary-divider"></div>
-                                <div class="om-summary-row om-summary-total">
-                                    <span>Total</span>
-                                    <span id="modalTotalAmount">₱0.00</span>
-                                </div>
-                                <div class="om-summary-row">
-                                    <span>Payment Method</span>
-                                    <span id="modalPaymentMethodOrder">—</span>
-                                </div>
-                                <div class="om-summary-row">
-                                    <span>Payment Status</span>
-                                    <span class="om-payment-status" id="modalPaymentStatus">—</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Order Timeline Section -->
-                    <div class="om-section">
-                        <div class="om-section-header">
-                            <i class="fas fa-clock"></i>
-                            <span>Order Timeline</span>
-                        </div>
-                        <div class="om-section-content">
-                            <div class="om-timeline" id="modalTimeline">
-                                <!-- Timeline will be populated by JS -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="om-section" id="modalReturnRequestsSection" style="display:none;">
-                        <div class="om-section-header">
-                            <i class="fas fa-undo"></i>
-                            <span>Return Requests</span>
-                        </div>
-                        <div class="om-section-content">
-                            <div id="modalReturnRequestText" class="om-return-request-text">No return request details.</div>
+                    <div class="om-section" style="margin-top: 0;">
+                        <div id="modalTimeline">
+                            <!-- Timeline will be populated by JS -->
                         </div>
                     </div>
                 </div>
-
-                <!-- Footer Actions -->
-                <div class="om-footer">
-                    <button class="btn btn-secondary" id="printOrderBtn">
+                <hr class="order-modal-footer-divider" />
+                <div class="order-modal-footer" style="padding: 0 32px 24px 32px; margin-top: 12px; display: flex; justify-content: flex-end;">
+                    <button class="btn btn-secondary" id="printOrderBtn" style="background: #fff; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 7px; cursor: pointer;">
                         <i class="fas fa-print"></i> Print Order Slip
                     </button>
-                    <div class="om-action-buttons" id="modalActionButtons">
-                        <!-- Action buttons will be populated by JS -->
-                    </div>
                 </div>
-
             </div>
         </div>
-
+        <!-- END ORDER DETAILS MODAL -->
         <!-- PAYMENT DETAILS MODAL -->
         <div id="paymentModal" class="modal-overlay">
             <div class="pay-modal-card">
@@ -522,23 +496,21 @@ requireRole(['inventory_orderAdmin']);
                 <div class="modal-body" style="padding:20px 24px;">
                     <div class="ep-profile-card">
                         <div class="ep-avatar-wrapper">
-                            <div class="ep-avatar-initials" id="epAvatarInitials"></div>
+                            <div class="ep-avatar-initials" id="epAvatarInitials">ER</div>
                             <img src="/global/pic.png" alt="Profile" id="epAvatarImg" class="ep-avatar-img" onerror="this.style.display='none'">
                             <label for="profileImageInput" class="ep-avatar-edit" title="Change photo">
                                 <i class="fas fa-pencil-alt"></i>
                             </label>
-                            <input type="file" id="profileImageInput" accept="image/*" style="display: none;" name='profileImageInput'>
+                            <input type="file" id="profileImageInput" accept="image/*" style="display:none;" name='profileImageInput'>
                         </div>
                         <div class="ep-card-info">
-                            <div class="ep-card-name" id="epCardName"></div>
-                            <div class="ep-card-email" id="epCardEmail"></div>
+                            <div class="ep-card-name">Erica Ramirez</div>
+                            <div class="ep-card-email">ericakes.ramirez@lookgoodframes.com</div>
                             <label for="profileImageInput" class="ep-change-photo-btn">
                                 <i class="fas fa-camera"></i> Change photo
                             </label>
                         </div>
                     </div>
-
-                    <!-- Two-column fields -->
                     <div class="ep-form-grid">
                         <div class="ep-form-group">
                             <label class="ep-label">FULL NAME</label>
@@ -546,21 +518,14 @@ requireRole(['inventory_orderAdmin']);
                         </div>
                         <div class="ep-form-group">
                             <label class="ep-label">ROLE</label>
-                            <input type="text" class="ep-input" id="profilePosition" value="Admin" readonly name='role'>
+                            <input type="text" class="ep-input" id="role" value="Admin" readonly name='role'>
                         </div>
                     </div>
-
-                    <!-- Full-width email -->
-                    <div class="ep-form-group" style="margin-top: 14px;">
+                    <div class="ep-form-group" style="margin-top:14px;">
                         <label class="ep-label">EMAIL ADDRESS</label>
-                        <input type="email" class="ep-input" id="profileEmail"  name='email'>
+                        <input type="email" class="ep-input" id="email" value="ericakes.ramirez@lookgoodframes.com" name='email'>
                     </div>
-
                     <div class="ep-section-title" style="margin-top:10px;">Change password</div>
-                    <div class="ep-form-group" style="margin-top: 12px;">
-                        <label class="ep-label">CURRENT PASSWORD</label>
-                        <input type="password" class="ep-input" id="currentPassword" placeholder="Enter current password" name='currentPassword'>
-                    </div>
                     <div class="ep-form-grid" style="margin-top:12px;margin-bottom:8px;">
                         <div class="ep-form-group">
                             <label class="ep-label">NEW PASSWORD</label>

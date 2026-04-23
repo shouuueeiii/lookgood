@@ -33,7 +33,7 @@ $conn->query(
 if ($method === 'GET') {
     $stmt = $conn->prepare(
         "SELECT p.product_id, p.name, p.price, p.stock, p.image, p.category
-         FROM wishlist w
+        FROM wishlist w
          JOIN products p ON w.product_id = p.product_id
          WHERE w.user_id = ?
          ORDER BY w.added_at DESC"

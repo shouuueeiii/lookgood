@@ -1,12 +1,4 @@
 <?php
-/**
- * userBack_end/guestCheckout.php
- * Saves a guest order into the guest_checkout and order_items tables.
- * Mirrors save-order.php but uses guest_id from session instead of user_id.
- *
- * POST body (JSON): same shape as save-order.php
- * Session must contain: guest_id (UUID assigned on first visit)
- */
 
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
@@ -21,7 +13,6 @@ if (!@include_once __DIR__ . '/../config.php') {
     exit;
 }
 
-// Assign a guest_id UUID to this session if not already set
 if (empty($_SESSION['guest_id'])) {
     $_SESSION['guest_id'] = sprintf(
         '%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
@@ -33,7 +24,6 @@ if (empty($_SESSION['guest_id'])) {
     );
 }
 
-// If the user is actually logged in, redirect them to the regular save-order
 if (!empty($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === 'user') {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Logged-in users should use save-order.php']);
@@ -42,51 +32,25 @@ if (!empty($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === 'user') {
 
 $guestId = $_SESSION['guest_id'];
 
-// Ensure guest_checkout table exists
 $conn->query("
     CREATE TABLE IF NOT EXISTS guest_checkout (
-        id              INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        guest_id        VARCHAR(64)  NOT NULL,
-        guest_order_id  VARCHAR(30)  NULL,
+        id           INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+        guest_id     VARCHAR(64)  NOT NULL,
         client_order_ref VARCHAR(80) NULL,
-        total_amount    DECIMAL(10,2) NOT NULL DEFAULT 0,
-        full_name       VARCHAR(100) NULL,
-        email           VARCHAR(100) NULL,
-        phone           VARCHAR(20)  NULL,
-        address         TEXT         NULL,
-        zip             VARCHAR(10)  NULL,
-        payment_method  VARCHAR(50)  NULL,
-        shipping_fee    DECIMAL(10,2) DEFAULT 0,
-        status          ENUM('pending','processing','shipped','out_for_delivery','delivered','completed','cancelled','returned') NOT NULL DEFAULT 'pending',
-        created_at      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+        full_name    VARCHAR(100) NULL,
+        email        VARCHAR(100) NULL,
+        phone        VARCHAR(20)  NULL,
+        address      TEXT         NULL,
+        zip          VARCHAR(10)  NULL,
+        payment_method VARCHAR(50) NULL,
+        shipping_fee DECIMAL(10,2) DEFAULT 0,
+        status       ENUM('pending','processing','shipped','out_for_delivery','delivered','completed','cancelled','returned') NOT NULL DEFAULT 'pending',
+        created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uq_client_ref (client_order_ref),
-        UNIQUE KEY uq_guest_order_id (guest_order_id),
         INDEX idx_guest_id (guest_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 ");
-
-// Add guest_order_id column if it doesn't exist yet (for existing tables)
-$conn->query("ALTER TABLE guest_checkout ADD COLUMN IF NOT EXISTS guest_order_id VARCHAR(30) NULL UNIQUE AFTER guest_id");
-
-/**
- * Generate a formatted guest order ID: GUEST-YYYYMMDD-XXXXX
- * Ensures uniqueness by checking the DB.
- */
-function generateGuestOrderId(mysqli $conn): string {
-    $datePart = date('Ymd');
-    $attempts = 0;
-    do {
-        $suffix = strtoupper(substr(bin2hex(random_bytes(3)), 0, 5));
-        $candidate = "GUEST-{$datePart}-{$suffix}";
-        $chk = $conn->prepare('SELECT id FROM guest_checkout WHERE guest_order_id = ? LIMIT 1');
-        $chk->bind_param('s', $candidate);
-        $chk->execute();
-        $exists = (bool)$chk->get_result()->fetch_assoc();
-        $chk->close();
-        $attempts++;
-    } while ($exists && $attempts < 10);
-    return $candidate;
-}
 
 function pushAdminNotificationGuest(mysqli $conn, string $type, string $title, string $message, array $data, string $sourceKey): void {
     $conn->query("
@@ -151,13 +115,13 @@ if ($fullName === '' || $email === '' || $phone === '' || $address === '' || $zi
 }
 
 // Idempotency — don't double-save the same client_order_ref
-$existing = $conn->prepare('SELECT id, guest_order_id FROM guest_checkout WHERE client_order_ref = ? LIMIT 1');
+$existing = $conn->prepare('SELECT id FROM guest_checkout WHERE client_order_ref = ? LIMIT 1');
 if ($existing) {
     $existing->bind_param('s', $clientRef);
     $existing->execute();
     if ($row = $existing->get_result()->fetch_assoc()) {
         $existing->close();
-        echo json_encode(['success' => true, 'order_id' => (int)$row['id'], 'guest_order_id' => $row['guest_order_id'], 'already_saved' => true]);
+        echo json_encode(['success' => true, 'order_id' => (int)$row['id'], 'already_saved' => true]);
         exit;
     }
     $existing->close();
@@ -166,18 +130,16 @@ if ($existing) {
 $conn->begin_transaction();
 
 try {
-    $guestOrderId = generateGuestOrderId($conn);
-
     $insert = $conn->prepare(
         'INSERT INTO guest_checkout
-            (guest_id, guest_order_id, client_order_ref, total_amount, full_name, email, phone, address, zip, payment_method, shipping_fee, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            (guest_id, client_order_ref, total_amount, full_name, email, phone, address, zip, payment_method, shipping_fee, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     if (!$insert) throw new Exception('Failed to prepare guest order insert');
 
     $status = 'pending';
-    $insert->bind_param('sssdsssssdss',
-        $guestId, $guestOrderId, $clientRef, $total,
+    $insert->bind_param('ssdsssssdss',
+        $guestId, $clientRef, $total,
         $fullName, $email, $phone, $address, $zip,
         $paymentMethod, $shippingFee, $status
     );
@@ -239,12 +201,12 @@ try {
     pushAdminNotificationGuest(
         $conn, 'order',
         'New Guest Order',
-        'Guest order ' . $guestOrderId . ' placed by ' . $fullName . ' amounting to P' . number_format($total, 2) . '.',
-        ['orderId' => $guestOrderId, 'guestId' => $guestId, 'customer' => $fullName, 'status' => 'pending'],
+        'Guest order #' . $orderId . ' placed by ' . $fullName . ' amounting to P' . number_format($total, 2) . '.',
+        ['orderId' => (string)$orderId, 'guestId' => $guestId, 'customer' => $fullName, 'status' => 'pending'],
         'guest_order:new:' . $orderId
     );
 
-    echo json_encode(['success' => true, 'order_id' => $orderId, 'guest_order_id' => $guestOrderId]);
+    echo json_encode(['success' => true, 'order_id' => $orderId]);
 
 } catch (Throwable $e) {
     $conn->rollback();

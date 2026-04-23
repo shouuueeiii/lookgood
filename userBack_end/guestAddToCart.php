@@ -1,15 +1,5 @@
 <?php
-/**
- * userBack_end/guestAddToCart.php
- * Stores / updates / removes guest cart items in the guest_carts table.
- * Uses guest_id from session (UUID assigned on first visit).
- *
- * POST body (JSON):
- *   { "action": "add",    "product_id": "LGF-M-001-26", "quantity": 1 }
- *   { "action": "remove", "product_id": "LGF-M-001-26" }
- *   { "action": "clear"  }
- * GET → returns all cart items for this guest
- */
+
 
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
